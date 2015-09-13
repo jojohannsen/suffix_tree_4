@@ -26,6 +26,7 @@ class NodeFactory
   #
   def addLeaf(node, value, offset)
     result = self.newNode()
+    result.leafCount = 1
     node.addChild(value, result)
     result.suffixOffset = @nextSuffixOffset
     @nextSuffixOffset += 1
@@ -37,6 +38,7 @@ class NodeFactory
     result = self.newNode()
     result.incomingEdgeStartOffset = node.incomingEdgeStartOffset
     result.incomingEdgeEndOffset = incomingEdgeOffset - 1
+    result.suffixOffset = node.suffixOffset
     node.incomingEdgeStartOffset = incomingEdgeOffset
     node.parent.addChild(dataSource.valueAt(result.incomingEdgeStartOffset), result)
     result.addChild(dataSource.valueAt(incomingEdgeOffset), node)

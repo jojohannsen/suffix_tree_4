@@ -4,7 +4,7 @@ class SuffixLinker
   end
 
   def update(location)
-    if ((@nodeNeedingSuffixLink != nil) && location.onNode) then
+    if ((@nodeNeedingSuffixLink != nil) && (location.node != @nodeNeedingSuffixLink) && location.onNode) then
       @nodeNeedingSuffixLink.suffixLink = location.node
       @nodeNeedingSuffixLink = nil
     end

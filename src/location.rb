@@ -41,7 +41,12 @@ class Location
   #  is on an edge or because it is on a newly created internal node, traverse
   #  to the next suffix
   #
+  #  Returns true if it actually traversed, otherwise false
+  #
   def traverseToNextSuffix(dataSource)
+    if (@node.isRoot) then
+      return false
+    end
     upStart, upEnd = self.traverseUp
     if (@node.isRoot) then
       if (upStart < upEnd) then
@@ -53,6 +58,7 @@ class Location
       @node = @node.suffixLink
       self.traverseSkipCountDown(dataSource, upStart, upEnd)
     end
+    return true
   end
 
   #

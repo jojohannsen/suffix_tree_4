@@ -5,11 +5,14 @@ class Node
   # Root uses this, it has no incoming edge, yet as a Node has incoming edge offset properties
   UNSPECIFIED_OFFSET = -2
 
+  # Leaf nodes get special depth, since they vary as characters get added
+  LEAF_DEPTH = -3
+
   attr_accessor :incomingEdgeStartOffset, :incomingEdgeEndOffset, :suffixOffset
   attr_accessor :parent, :suffixLink, :children
   attr_accessor :nodeId
 
-  attr_accessor :characterDepth, :numberLeafNodesBelow
+  attr_accessor :characterDepth, :leafCount
 
   def initialize(nodeId)
     @nodeId = nodeId
@@ -22,7 +25,7 @@ class Node
     @children = nil
 
     @characterDepth = 0
-    @numberLeafNodesBelow = 0
+    @leafCount = 0
   end
 
   def addChild(cVal, child)
@@ -39,6 +42,10 @@ class Node
 
   def isLeaf
     return @incomingEdgeEndOffset == CURRENT_ENDING_OFFSET
+  end
+
+  def isInternal
+    return !isLeaf && !isRoot
   end
 
   def incomingEdgeLength

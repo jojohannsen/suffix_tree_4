@@ -7,5 +7,7 @@ class StringDataSource
     return @s[offset]
   end
 
-
+  def stringValue
+    return @s
+  end
 end
