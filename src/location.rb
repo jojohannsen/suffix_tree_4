@@ -93,4 +93,26 @@ class Location
       @onNode = true
     end
   end
+
+  def match(dataSource, s)
+    s.each_char.with_index(0) do |cval, index|
+      if (!self.matchChar(dataSource, cval)) then
+        return index
+      end
+    end
+    return s.length
+  end
+
+  def matchChar(dataSource, cval)
+    if (@onNode) then
+      if ((@node.children != nil) && (@node.children.has_key?(cval)))
+        self.traverseDownChildValue(cval)
+        return true
+      end
+    elsif (dataSource.valueAt(@incomingEdgeOffset) == cval) then
+      self.traverseDownEdgeValue
+      return true
+    end
+    return false
+  end
 end

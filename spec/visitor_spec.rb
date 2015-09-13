@@ -5,10 +5,12 @@ require_relative '../src/node_factory'
 require_relative '../src/data/string_data_source'
 require_relative '../src/data/file_data_source'
 require_relative '../src/ukkonen_builder'
-require_relative '../src/visitor/character_depth_visitor'
-require_relative '../src/visitor/dfs'
 require_relative '../src/visitor/bfs'
 require_relative '../src/visitor/leaf_count_visitor'
+require_relative '../src/visitor/character_depth_visitor'
+require_relative '../src/visitor/dfs'
+require_relative '../src/visitor/node_count_visitor'
+require_relative '../src/visitor/suffix_offset_visitor'
 
 describe 'character depth visitor' do
   let (:nodeFactory) { NodeFactory.new }
@@ -90,6 +92,38 @@ describe 'character depth visitor' do
       builder = UkkonenBuilder.new(fileDataSource, nodeFactory)
       builder.addSourceValues
       self.verifyLeafCount(builder)
+    end
+  end
+
+  def verifyNodeCount(dataSource)
+    builder = UkkonenBuilder.new(dataSource, nodeFactory)
+    builder.addSourceValues
+    ncv = NodeCountVisitor.new
+    bt = DFS.new(ncv)
+    bt.traverse(builder.root)
+    expect(ncv.count).to eq (17)
+  end
+
+  context "Count nodes" do
+    it "counts nodes with DFS traversal of file data source" do
+      verifyNodeCount(fileDataSource)
+    end
+  end
+
+  context "Count nodes" do
+    it "counts nodes with DFS traversal of string data source" do
+      verifyNodeCount(dataSource)
+    end
+  end
+
+  context "collect suffix offsets" do
+    it "traverses suffix tree and collects suffix offsets" do
+      soCollector = SuffixOffsetVisitor.new
+      so = BFS.new(soCollector)
+      builder = UkkonenBuilder.new(dataSource, nodeFactory)
+      builder.addSourceValues
+      so.traverse(builder.root)
+      expect(soCollector.result.sort).to eq ([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ])
     end
   end
 end
