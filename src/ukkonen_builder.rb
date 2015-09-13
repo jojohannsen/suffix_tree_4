@@ -13,12 +13,9 @@ class UkkonenBuilder
     @suffixLinker = SuffixLinker.new
   end
 
-  def addSource(dataSource)
-    @dataSource = dataSource
-    offset = 0
-    dataSource.stringValue.each_char do |cval|
+  def addSourceValues
+    @dataSource.stringValue.each_char.with_index(0) do |cval, offset|
       self.add(cval, offset)
-      offset += 1
     end
   end
 

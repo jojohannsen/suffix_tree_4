@@ -2,7 +2,8 @@ require 'rspec'
 require_relative '../src/location'
 require_relative '../src/node'
 require_relative '../src/node_factory'
-require_relative '../src/string_data_source'
+require_relative '../src/data/string_data_source'
+require_relative '../src/data/file_data_source'
 require_relative '../src/ukkonen_builder'
 require_relative '../src/visitor/character_depth_visitor'
 require_relative '../src/visitor/dfs'
@@ -18,7 +19,7 @@ describe 'character depth visitor' do
       nodeFactory = NodeFactory.new
       rootNodeId = nodeFactory.nextNodeId
       builder = UkkonenBuilder.new(dataSource, nodeFactory)
-      builder.addSource(dataSource)
+      builder.addSourceValues
       cdv = DFS.new(CharacterDepthVisitor.new)
       cdv.traverse(builder.root)
       expect(builder.root.characterDepth).to eq (0)
@@ -55,7 +56,7 @@ describe 'character depth visitor' do
       nodeFactory = NodeFactory.new
       rootNodeId = nodeFactory.nextNodeId
       builder = UkkonenBuilder.new(dataSource, nodeFactory)
-      builder.addSource(dataSource)
+      builder.addSourceValues
       cdv = BFS.new(CharacterDepthVisitor.new)
       cdv.traverse(builder.root)
       expect(builder.root.characterDepth).to eq (0)
@@ -92,7 +93,29 @@ describe 'character depth visitor' do
       nodeFactory = NodeFactory.new
       rootNodeId = nodeFactory.nextNodeId
       builder = UkkonenBuilder.new(dataSource, nodeFactory)
-      builder.addSource(dataSource)
+      builder.addSourceValues
+      lcv = DFS.new(LeafCountVisitor.new)
+      lcv.traverse(builder.root)
+      expect(builder.root.leafCount).to eq (10)  # final 'i' is implicit
+      mChild = builder.root.children['m']
+      iChild = builder.root.children['i']
+      sChild = builder.root.children['s']
+      pChild = builder.root.children['p']
+      expect(mChild.leafCount).to eq (1)
+      expect(iChild.leafCount).to eq (3)
+      expect(sChild.leafCount).to eq (4)
+      expect(pChild.leafCount).to eq (2)
+    end
+  end
+
+  context "child traversal" do
+    it "DFS leaf count, text file" do
+      nodeFactory = NodeFactory.new()
+      dataSource = FileDataSource.new("mississippi.txt")
+      nodeFactory = NodeFactory.new
+      rootNodeId = nodeFactory.nextNodeId
+      builder = UkkonenBuilder.new(dataSource, nodeFactory)
+      builder.addSourceValues
       lcv = DFS.new(LeafCountVisitor.new)
       lcv.traverse(builder.root)
       expect(builder.root.leafCount).to eq (10)  # final 'i' is implicit

@@ -1,7 +1,7 @@
 require 'rspec'
 require_relative '../src/location'
 require_relative '../src/node'
-require_relative '../src/string_data_source'
+require_relative '../src/data/string_data_source'
 require_relative '../src/ukkonen_builder'
 
 describe 'Suffix tree builder' do
