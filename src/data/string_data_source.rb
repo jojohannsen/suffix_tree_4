@@ -11,6 +11,7 @@ class StringDataSource
     return @s
   end
 
+  # substring
   def toString(startOffset, endOffset)
     if (endOffset >= startOffset) then
       return @s[startOffset..endOffset]
