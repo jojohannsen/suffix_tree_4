@@ -8,6 +8,8 @@ class DataSourceFactory
   def newDataSource(dataSourceType, dataSourceValue)
     if (dataSourceType == STRING_DATA_SOURCE) then
       return StringDataSource.new(dataSourceValue)
+    elsif (dataSourceType == FILE_DATA_SOURCE) then
+      return FileDataSource.new(dataSourceValue)
     end
   end
 end

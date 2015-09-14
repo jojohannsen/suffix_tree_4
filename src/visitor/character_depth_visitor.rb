@@ -7,6 +7,7 @@ class CharacterDepthVisitor
     elsif (node.isLeaf) then
       node.characterDepth = Node::LEAF_DEPTH
     end
+    return true
   end
 
   def postVisit(node)

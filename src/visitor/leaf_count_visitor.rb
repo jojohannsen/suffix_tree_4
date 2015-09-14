@@ -1,5 +1,6 @@
 class LeafCountVisitor
   def preVisit(node)
+    return true
   end
 
   def postVisit(node)

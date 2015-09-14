@@ -10,4 +10,12 @@ class StringDataSource
   def stringValue
     return @s
   end
+
+  def toString(startOffset, endOffset)
+    if (endOffset >= startOffset) then
+      return @s[startOffset..endOffset]
+    else
+      return @s[startOffset..(@s.length - 1)]
+    end
+  end
 end

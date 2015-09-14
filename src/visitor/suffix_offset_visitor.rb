@@ -10,6 +10,7 @@ class SuffixOffsetVisitor
     if (node.isLeaf) then
       @result << node.suffixOffset
     end
+    return true
   end
 
   def postVisit(node)

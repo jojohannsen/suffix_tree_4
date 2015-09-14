@@ -9,10 +9,11 @@ class BFS
 
     while (@q.size > 0) do
       node = @q.pop
-      @visitor.preVisit(node)
-      if (node.children != nil)  then
-        node.children.values.each do |child|
-          @q.unshift(child)
+      if (@visitor.preVisit(node)) then
+        if (node.children != nil)  then
+          node.children.values.each do |child|
+            @q.unshift(child)
+          end
         end
       end
     end
