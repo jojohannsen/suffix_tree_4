@@ -108,7 +108,7 @@ class Location
     end
   end
 
-  def match(dataSource, s)
+  def matchString(dataSource, s)
     s.each_char.with_index(0) do |cval, index|
       if (!self.matchChar(dataSource, cval)) then
         return index

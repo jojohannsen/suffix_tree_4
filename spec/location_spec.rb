@@ -4,11 +4,47 @@ require_relative '../src/node'
 require_relative '../src/node_factory'
 require_relative '../src/data/string_data_source'
 
-describe 'Location traversal' do
+describe 'Location class' do
+
+  let(:nodeFactory) { NodeFactory.new }
+  let(:root) { nodeFactory.newRoot }
+  let(:testNode) { nodeFactory.newNode }
+  let(:testNode2) { nodeFactory.newNode }
+
+  describe "#new" do
+    it "starts at a node" do
+      location = Location.new(testNode)
+      expect(location.node).to eq testNode
+      expect(location.onNode).to eq true
+      expect(location.incomingEdgeOffset).to eq Node::UNSPECIFIED_OFFSET
+    end
+  end
+
+  describe "#traverseDownChildValue" do
+    it "ends on child node if child edge has one value" do
+      testNode.addChild('c', testNode2)
+      location = Location.new(testNode)
+      testNode2.incomingEdgeStartOffset = testNode2.incomingEdgeEndOffset = 3
+      location.traverseDownChildValue('c')
+      expect(location.node).to eq testNode2
+      expect(location.onNode).to eq true
+      expect(location.incomingEdgeOffset).to eq Node::UNSPECIFIED_OFFSET
+    end
+
+    it "ends on second character of child edge when that edge has more than one value" do
+      testNode.addChild('c', testNode2)
+      location = Location.new(testNode)
+      testNode2.incomingEdgeStartOffset = 1
+      testNode2.incomingEdgeEndOffset = 3
+      location.traverseDownChildValue('c')
+      expect(location.node).to eq testNode2
+      expect(location.onNode).to eq false
+      expect(location.incomingEdgeOffset).to eq 2
+    end
+  end
 
   context "child traversal" do
     it "traverses to leaf child" do
-      nodeFactory = NodeFactory.new()
       root = nodeFactory.newRoot()
       child1 = nodeFactory.newNode()
       child2 = nodeFactory.newNode()
@@ -26,7 +62,6 @@ describe 'Location traversal' do
 
   context "edge traversal" do
     it "traverse to middle of edge" do
-      nodeFactory = NodeFactory.new()
       root = nodeFactory.newRoot()
       child = nodeFactory.newNode()
       child.incomingEdgeStartOffset = 0
@@ -44,7 +79,6 @@ describe 'Location traversal' do
   context "suffix link traversal" do
     it "follows suffix link" do
       dataSource = StringDataSource.new("abxy")
-      nodeFactory = NodeFactory.new()
       root = nodeFactory.newRoot()
       child1 = nodeFactory.newNode()
       root.addChild('a', child1)
