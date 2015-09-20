@@ -32,6 +32,7 @@ class NodeFactory
     @nextSuffixOffset += 1
     result.incomingEdgeStartOffset = offset
     result.incomingEdgeEndOffset = Node::CURRENT_ENDING_OFFSET
+    result
   end
 
   def splitEdgeAt(dataSource, node, incomingEdgeOffset)

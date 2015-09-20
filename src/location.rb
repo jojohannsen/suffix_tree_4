@@ -9,21 +9,31 @@ require_relative 'node'
 #  If we are not on a node, there is an incoming edge with at least one value
 #  so we store the offset of that value in the data source
 #
+#  The location can never be onNode at a leaf, but can be at a leaf with
+#  an incomingEdgeOffset at or past the leaf's incomingEdgeStartOffset
+#
 class Location
   attr_reader :node, :onNode, :incomingEdgeOffset
 
-  def initialize(node)
-    self.jumpToNode(node)
-  end
-
-  def jumpToNode(node)
+  #
+  #  optional parameters needed for testing
+  #
+  def initialize(node, onNode = true, incomingEdgeOffset = Node::UNSPECIFIED_OFFSET)
     @node = node
-    @onNode = true
-    @incomingEdgeOffset = @node.incomingEdgeStartOffset
+    @onNode = onNode
+    @incomingEdgeOffset = incomingEdgeOffset
   end
 
+  #
+  #  traverse to parent, return the range of characters covered
+  #
   def traverseUp
-    incomingEdgeStart, incomingEdgeEnd = @node.incomingEdgeStartOffset, @node.incomingEdgeEndOffset
+    incomingEdgeStart = @node.incomingEdgeStartOffset
+    if (@onNode) then
+      incomingEdgeEnd = @node.incomingEdgeEndOffset
+    else
+      incomingEdgeEnd = @incomingEdgeOffset - 1
+    end
     @node = @node.parent
     @incomingEdgeOffset = Node::UNSPECIFIED_OFFSET
     @onNode = true
@@ -31,9 +41,7 @@ class Location
   end
 
   def traverseSuffixLink
-    @node = @node.suffixLink
-    @incomingEdgeOffset = Node::UNSPECIFIED_OFFSET
-    @onNode = true
+    self.jumpToNode(@node.suffixLink)
   end
 
   #
@@ -142,4 +150,11 @@ class Location
       return @node.parent.characterDepth + @incomingEdgeOffset - @node.incomingEdgeStartOffset
     end
   end
+
+  def jumpToNode(node)
+    @node = node
+    @onNode = true
+    @incomingEdgeOffset = Node::UNSPECIFIED_OFFSET
+  end
+
 end

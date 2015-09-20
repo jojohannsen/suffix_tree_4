@@ -21,8 +21,8 @@ class Searcher
 
   # match a string starting at a specific location,
   # returning the character depth of the resulting match
-  def match(location, s)
-    location.match(@dataSource, s)
+  def findAtLocation(location, s)
+    location.matchString(@dataSource, s)
     return location.depth
   end
 end
