@@ -1,5 +1,14 @@
 require_relative 'node'
 
+#
+#  This class keeps track of the next value to check in a suffix tree
+#
+#  If we are located at a node, there are several options for the next value
+#  which are in the map of value-to-node.
+#
+#  If we are not on a node, there is an incoming edge with at least one value
+#  so we store the offset of that value in the data source
+#
 class Location
   attr_reader :node, :onNode, :incomingEdgeOffset
 
@@ -16,14 +25,14 @@ class Location
   def traverseUp
     incomingEdgeStart, incomingEdgeEnd = @node.incomingEdgeStartOffset, @node.incomingEdgeEndOffset
     @node = @node.parent
-    @incomingEdgeOffset = @node.incomingEdgeStartOffset
+    @incomingEdgeOffset = Node::UNSPECIFIED_OFFSET
     @onNode = true
     return incomingEdgeStart, incomingEdgeEnd
   end
 
   def traverseSuffixLink
     @node = @node.suffixLink
-    @incomingEdgeOffset = @node.incomingEdgeStartOffset
+    @incomingEdgeOffset = Node::UNSPECIFIED_OFFSET
     @onNode = true
   end
 
@@ -32,8 +41,13 @@ class Location
   #
   def traverseDownChildValue(value)
     @node = @node.children[value]
-    @onNode = (@node.incomingEdgeLength == 1)
-    @incomingEdgeOffset = @node.incomingEdgeStartOffset + 1
+    if (@node.incomingEdgeLength == 1) then
+      @onNode = true
+      @incomingEdgeOffset = Node::UNSPECIFIED_OFFSET
+    else
+      @onNode = false
+      @incomingEdgeOffset = @node.incomingEdgeStartOffset + 1
+    end
   end
 
   #
@@ -114,5 +128,18 @@ class Location
       return true
     end
     return false
+  end
+
+  #
+  #  get the depth of the location
+  #
+  #  Requires the tree nodes all have character depth
+  #
+  def depth
+    if (@onNode) then
+      return @node.characterDepth
+    else
+      return @node.parent.characterDepth + @incomingEdgeOffset - @node.incomingEdgeStartOffset
+    end
   end
 end
