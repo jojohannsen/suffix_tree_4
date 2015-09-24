@@ -14,13 +14,14 @@ require_relative '../src/search/searcher'
 
 describe "Search class" do
   describe '#find' do
-    let (:nodeFactory) { NodeFactory.new }
+
     let (:dataSource) { StringDataSource.new("mississippi") }
+    let (:nodeFactory) { NodeFactory.new dataSource }
     let (:rootNodeId) { nodeFactory.nextNodeId }
     let (:fileDataSource) { FileDataSource.new(File.join('spec', 'fixtures', "mississippi.txt")) }
 
     it 'finds all substrings' do
-      builder = UkkonenBuilder.new(dataSource, nodeFactory)
+      builder = UkkonenBuilder.new nodeFactory
       builder.addSourceValues
       searcher = Searcher.new(dataSource, builder.root)
       expect(searcher.find("m")).to eq ([0])

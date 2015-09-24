@@ -28,14 +28,6 @@ class Node
     @leafCount = 0
   end
 
-  def addChild(cVal, child)
-    if (@children == nil) then
-      @children = {}
-    end
-    @children[cVal] = child
-    child.parent = self
-  end
-
   def isRoot
     return @parent == nil
   end

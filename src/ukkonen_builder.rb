@@ -5,9 +5,9 @@ require_relative 'suffix_linker'
 class UkkonenBuilder
   attr_reader :dataSource, :location, :suffixLinker, :nodeFactory, :root
 
-  def initialize(dataSource, nodeFactory)
-    @dataSource = dataSource
+  def initialize nodeFactory
     @nodeFactory = nodeFactory
+    @dataSource = @nodeFactory.dataSource
     @root = @nodeFactory.newRoot()
     @location = Location.new(@root)
     @suffixLinker = SuffixLinker.new
@@ -42,7 +42,7 @@ class UkkonenBuilder
       @location.traverseDownEdgeValue()
       return false   # found value on edge, rule 3
     else
-      newNode = @nodeFactory.splitEdgeAt(@dataSource, @location.node, @location.incomingEdgeOffset)
+      newNode = @nodeFactory.splitEdgeAt(@location.node, @location.incomingEdgeOffset)
       @suffixLinker.nodeNeedingSuffixLink(newNode)
       @location.jumpToNode(newNode)
       return true   # rule 2

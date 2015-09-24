@@ -95,13 +95,16 @@ class Location
         @onNode = false
         @incomingEdgeOffset = @node.incomingEdgeStartOffset + (endOffset - startOffset + 1)
       else
-        startOffset += @node.incomingEdgeLength
+        incomingEdgeLength = @node.incomingEdgeLength
+        startOffset += incomingEdgeLength
         remainingLength = endOffset - startOffset + 1
         @onNode = (remainingLength == 0)
         # if remaining length is negative, it means we have past where we need to be
         # by that amount, incoming edge offset is set to end reduced by that amount
         if (remainingLength < 0) then
           @incomingEdgeOffset = @node.incomingEdgeEndOffset + remainingLength + 1
+        else
+          @incomingEdgeOffset = @node.incomingEdgeStartOffset
         end
       end
 

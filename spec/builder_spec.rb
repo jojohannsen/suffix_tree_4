@@ -9,8 +9,8 @@ describe 'Suffix tree builder' do
   context "basic tree" do
     it "builds tree with one leaf" do
       dataSource = StringDataSource.new("a")
-      nodeFactory = NodeFactory.new
-      builder = UkkonenBuilder.new(dataSource, nodeFactory)
+      nodeFactory = NodeFactory.new dataSource
+      builder = UkkonenBuilder.new nodeFactory
       builder.add('a', 0)
       expect(builder.root.children.length).to eq (1)
       location = builder.location
@@ -22,8 +22,8 @@ describe 'Suffix tree builder' do
   context "two char tree" do
     it "builds tree with two leaf" do
       dataSource = StringDataSource.new("ab")
-      nodeFactory = NodeFactory.new
-      builder = UkkonenBuilder.new(dataSource, nodeFactory)
+      nodeFactory = NodeFactory.new dataSource
+      builder = UkkonenBuilder.new nodeFactory
       builder.add('a', 0)
       expect(builder.root.children.length).to eq (1)
       child1 = builder.root.children['a']
@@ -41,9 +41,9 @@ describe 'Suffix tree builder' do
   context "mississippi" do
     it "builds mississippi tree" do
       dataSource = StringDataSource.new("mississippi")
-      nodeFactory = NodeFactory.new
+      nodeFactory = NodeFactory.new dataSource
       rootNodeId = nodeFactory.nextNodeId
-      builder = UkkonenBuilder.new(dataSource, nodeFactory)
+      builder = UkkonenBuilder.new nodeFactory
       suffix0_nodeId = nodeFactory.nextNodeId
       builder.add('m', 0)
       expect(nodeFactory.nextNodeId).to eq (suffix0_nodeId + 1)

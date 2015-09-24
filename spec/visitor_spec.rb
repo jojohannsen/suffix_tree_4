@@ -13,10 +13,12 @@ require_relative '../src/visitor/node_count_visitor'
 require_relative '../src/visitor/suffix_offset_visitor'
 
 describe 'character depth visitor' do
-  let (:nodeFactory) { NodeFactory.new }
+
   let (:dataSource) { StringDataSource.new("mississippi") }
-  let (:rootNodeId) { nodeFactory.nextNodeId }
+  let (:stringNodeFactory) { NodeFactory.new dataSource }
+  let (:stringRootNodeId) { stringNodeFactory.nextNodeId }
   let (:fileDataSource) { FileDataSource.new(File.join('spec', 'fixtures', "mississippi.txt")) }
+  let (:fileNodeFactory) { NodeFactory.new fileDataSource }
 
   def verifyCharacterDepth(root)
     expect(root.characterDepth).to eq (0)
@@ -47,7 +49,7 @@ describe 'character depth visitor' do
 
   context "DFS traversal" do
     it "sets character depth using depth first traversal" do
-      builder = UkkonenBuilder.new(dataSource, nodeFactory)
+      builder = UkkonenBuilder.new stringNodeFactory
       builder.addSourceValues
       cdv = DFS.new(CharacterDepthVisitor.new)
       cdv.traverse(builder.root)
@@ -57,7 +59,7 @@ describe 'character depth visitor' do
 
   context "BFS traversal" do
     it "sets character depth using breadth first traversal" do
-      builder = UkkonenBuilder.new(dataSource, nodeFactory)
+      builder = UkkonenBuilder.new stringNodeFactory
       builder.addSourceValues
       cdv = BFS.new(CharacterDepthVisitor.new)
       cdv.traverse(builder.root)
@@ -81,7 +83,7 @@ describe 'character depth visitor' do
 
   context "DFS traversal" do
     it "sets leaf count for suffix tree created from string" do
-      builder = UkkonenBuilder.new(dataSource, nodeFactory)
+      builder = UkkonenBuilder.new stringNodeFactory
       builder.addSourceValues
       self.verifyLeafCount(builder)
     end
@@ -89,14 +91,14 @@ describe 'character depth visitor' do
 
   context "DFS traversal" do
     it "sets leaf count for suffix tree loaded from file" do
-      builder = UkkonenBuilder.new(fileDataSource, nodeFactory)
+      builder = UkkonenBuilder.new fileNodeFactory
       builder.addSourceValues
       self.verifyLeafCount(builder)
     end
   end
 
   def verifyNodeCount(dataSource)
-    builder = UkkonenBuilder.new(dataSource, nodeFactory)
+    builder = UkkonenBuilder.new fileNodeFactory
     builder.addSourceValues
     ncv = NodeCountVisitor.new
     bt = DFS.new(ncv)
@@ -120,7 +122,7 @@ describe 'character depth visitor' do
     it "traverses suffix tree and collects suffix offsets" do
       soCollector = SuffixOffsetVisitor.new
       so = BFS.new(soCollector)
-      builder = UkkonenBuilder.new(dataSource, nodeFactory)
+      builder = UkkonenBuilder.new stringNodeFactory
       builder.addSourceValues
       so.traverse(builder.root)
       expect(soCollector.result.sort).to eq ([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ])
