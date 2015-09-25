@@ -1,7 +1,7 @@
 require_relative 'node'
 
 class NodeFactory
-  attr_reader :nextNodeId, :nextSuffixOffsetToRecord, :root
+  attr_reader :nextNodeId, :root
   attr_reader :dataSource
   attr_reader :configuration
 
@@ -11,7 +11,6 @@ class NodeFactory
   end
 
   def reset
-    @nextSuffixOffsetToRecord = 0
     @nextNodeId = 1
   end
 
@@ -31,11 +30,10 @@ class NodeFactory
   #
   #  The algorithm adds leaf nodes in order
   #
-  def addLeaf(node, value, offset)
+  def addLeaf(suffixOffset, node, value, offset)
     result = newChild(node, value)
     result.leafCount = 1
-    result.suffixOffset = @nextSuffixOffsetToRecord
-    @nextSuffixOffsetToRecord += 1
+    result.suffixOffset = suffixOffset
     result.incomingEdgeStartOffset = offset
     result.incomingEdgeEndOffset = Node::CURRENT_ENDING_OFFSET
     result

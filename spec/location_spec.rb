@@ -9,10 +9,10 @@ describe 'Location class' do
   let(:dataSource)  { StringDataSource.new("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz")}
   let(:nodeFactory) { NodeFactory.new dataSource }
   let(:root) { nodeFactory.newRoot }
-  let(:level1) { nodeFactory.addLeaf(root, 'a', 0) }    # level1 is entire string
+  let(:level1) { nodeFactory.addLeaf(0, root, 'a', 0) }    # level1 is entire string
   let(:level2) { nodeFactory.splitEdgeAt(level1, 26) }  # root -> level2(0, 25) -> level1(26, 51)
   let(:level3) { nodeFactory.splitEdgeAt(level1, 29) }  # root -> level2(0, 25) -> level3(26,28) -> level1 (29,51)
-  let(:linkNode) { nodeFactory.addLeaf(root, 'b', 2) }
+  let(:linkNode) { nodeFactory.addLeaf(1, root, 'b', 2) }
 
   def forceLazyLoad
     location = Location.new(root)
@@ -57,7 +57,7 @@ describe 'Location class' do
     # root -> level2(0, 25) -> level3(26,28) -> level1 (29,51)
     it "goes to parent node starting from leaf" do
       forceLazyLoad
-      leafNode = nodeFactory.addLeaf(level3, 'c', 3)
+      leafNode = nodeFactory.addLeaf(1, level3, 'c', 3)
       location = Location.new(leafNode, false, 6)
       startOffset, endOffset = location.traverseUp
       expect(location.node).to eq level3
@@ -70,7 +70,7 @@ describe 'Location class' do
     # root -> level2(0, 25) -> level3(26,28) -> level1 (29,51)
     it "goes to parent node starting at mid-edge from internal node" do
       forceLazyLoad
-      leafNode = nodeFactory.addLeaf(level3, 'x', 38)
+      leafNode = nodeFactory.addLeaf(1, level3, 'x', 38)
       location = Location.new(leafNode, false, 48)
       startOffset, endOffset = location.traverseUp
       expect(location.node).to eq level3
@@ -98,7 +98,7 @@ describe 'Location class' do
   describe "#traverseDownChildValue" do
     it "ends on child node if child edge has one value" do
       forceLazyLoad
-      testNode = nodeFactory.addLeaf(level2, 'c', 2)
+      testNode = nodeFactory.addLeaf(0, level2, 'c', 2)
       location = Location.new(level2)
       location.traverseDownChildValue('c')
       expect(location.node).to eq testNode
@@ -108,7 +108,7 @@ describe 'Location class' do
 
     it "ends on second character of child edge when that edge has more than one value" do
       forceLazyLoad
-      leafNode = nodeFactory.addLeaf(level2, 'c', 2)
+      leafNode = nodeFactory.addLeaf(0, level2, 'c', 2)
       internalNode = nodeFactory.splitEdgeAt(leafNode, 7)
       location = Location.new(internalNode)
       location.traverseDownChildValue('h')
@@ -123,7 +123,7 @@ describe 'Location class' do
   describe "#traverseSkipDownCount" do
     it "checks single character to get to next node" do
       forceLazyLoad
-      leaf = nodeFactory.addLeaf(level2, 'c', 2)
+      leaf = nodeFactory.addLeaf(0, level2, 'c', 2)
       # root -> level2(0, 25) -> level3(26,28) -> level1 (29,51)
       #                a, z   "a"       a,c    "d"        d,z
       #                       "c"  leaf(2,51)

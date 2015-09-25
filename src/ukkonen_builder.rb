@@ -11,6 +11,7 @@ class UkkonenBuilder
     @root = @nodeFactory.newRoot()
     @location = Location.new(@root)
     @suffixLinker = SuffixLinker.new
+    @suffixOffset = 0
   end
 
   def addSourceValues
@@ -19,10 +20,16 @@ class UkkonenBuilder
     end
   end
 
+  def addValue(value)
+    @lastOffsetAdded += 1
+    self.add(value, @lastOffsetAdded)
+  end
+
   def add(value, offset)
     while self.extend(value, offset) do
       @suffixLinker.update(@location)
     end
+    @lastOffsetAdded = offset
   end
 
   #
@@ -35,7 +42,7 @@ class UkkonenBuilder
         @location.traverseDownChildValue(value)
         return false  # rule 3
       else
-        @nodeFactory.addLeaf(@location.node, value, offset)
+        @nodeFactory.addLeaf(nextSuffixOffset, @location.node, value, offset)
         return @location.traverseToNextSuffix(@dataSource)  # rule 1, traverse returns false when at root
       end
     elsif (@dataSource.valueAt(@location.incomingEdgeOffset) == value) then
@@ -47,5 +54,12 @@ class UkkonenBuilder
       @location.jumpToNode(newNode)
       return true   # rule 2
     end
+  end
+
+  private
+  def nextSuffixOffset
+    result = @suffixOffset
+    @suffixOffset += 1
+    result
   end
 end

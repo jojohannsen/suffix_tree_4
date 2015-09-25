@@ -1,11 +1,20 @@
 require_relative '../visitor/bfs'
 require_relative '../visitor/suffix_offset_visitor'
 
+#
+#  Searcher finds matches in a tree
+#
+#  It needs the tree root, and the data source used to make the tree
+#  This assumes the tree was made with a single data source.
+#
+#  "find" really should be finding matches from a different data source (not a string)
+#
 class Searcher
-  def initialize(dataSource, node)
-    @dataSource = dataSource
-    @root = node
+  def initialize(treeDataSource, treeRoot)
+    @dataSource = treeDataSource
+    @root = treeRoot
   end
+
 
   def find(s)
     location = Location.new(@root)

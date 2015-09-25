@@ -34,7 +34,6 @@ describe "NodeFactory class" do
       root = nodeFactory.newRoot
       expect(root.nodeId).to eq 1
       expect(root.children.length).to eq 0
-      expect(nodeFactory.nextSuffixOffsetToRecord).to eq 0
       expect(nodeFactory.nextNodeId).to eq 2
     end
 
@@ -49,7 +48,7 @@ describe "NodeFactory class" do
   describe "#addLeaf" do
     it "adds a leaf node" do
       root = nodeFactory.newRoot
-      child = nodeFactory.addLeaf(root, 'a', 3)
+      child = nodeFactory.addLeaf(0, root, 'a', 3)
       aChild = root.children['a']
       expect(aChild).to eq child
       expect(root.children['a'].parent).to eq root
@@ -59,7 +58,7 @@ describe "NodeFactory class" do
   describe "#splitEdgeAtOffset" do
     it "splits a long edge" do
       root = alphaNodeFactory.newRoot
-      level1 = alphaNodeFactory.addLeaf(root, 'a', 0)
+      level1 = alphaNodeFactory.addLeaf(0, root, 'a', 0)
       expect(level1.parent).to eq root
       expect(level1.incomingEdgeStartOffset).to eq 0
       expect(level1.incomingEdgeEndOffset).to eq Node::CURRENT_ENDING_OFFSET
@@ -81,7 +80,7 @@ describe "NodeFactory class" do
 
     it "splits edge and returns that node" do
       root = nodeFactory.newRoot
-      child = nodeFactory.addLeaf(root, 'm', 0)
+      child = nodeFactory.addLeaf(0, root, 'm', 0)
       middleNode = nodeFactory.splitEdgeAt(child, 3)
       expect(middleNode.parent).to eq (root)
       expect(middleNode.incomingEdgeStartOffset).to eq 0
@@ -95,7 +94,7 @@ describe "NodeFactory class" do
 
     it "splits nodes correctly" do
       root = nodeFactory2.newRoot
-      level1 = nodeFactory2.addLeaf(root, 'a', 0)
+      level1 = nodeFactory2.addLeaf(0, root, 'a', 0)
       expect(root.children['a']).to eq level1
       level2 = nodeFactory2.splitEdgeAt(level1, 26)
       expect(root.children['a']).to eq level2
@@ -109,7 +108,7 @@ describe "NodeFactory class" do
 
     it "handles multiple splits" do
       root2 = nodeFactory2.newRoot
-      rLevel1 = nodeFactory2.addLeaf(root2, 'a', 0)
+      rLevel1 = nodeFactory2.addLeaf(0, root2, 'a', 0)
       expect(rLevel1.incomingEdgeStartOffset).to eq 0
       expect(rLevel1.incomingEdgeEndOffset).to eq Node::CURRENT_ENDING_OFFSET
       rLevel2 = nodeFactory2.splitEdgeAt(rLevel1, 26)
@@ -124,9 +123,5 @@ describe "NodeFactory class" do
 
     let(:dataSource2)  { StringDataSource.new("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz")}
     let(:nodeFactory2) { NodeFactory.new dataSource2 }
-    let(:root2) { nodeFactory2.newRoot }
-    let(:level1) { nodeFactory2.addLeaf(root, 'a', 0) }    # level1 is entire string
-    let(:level2) { nodeFactory2.splitEdgeAt(level1, 26) }  # root -> level2(0, 25) -> level1(26, 51)
-    let(:level3) { nodeFactory2.splitEdgeAt(level2, 29) }  # root -> level2(0, 25) -> level3(26,28) -> level1 (29,51)
   end
 end
