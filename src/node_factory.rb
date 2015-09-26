@@ -5,8 +5,16 @@ class NodeFactory
   attr_reader :dataSource
   attr_reader :configuration
 
+  # any configuration value set to true here becomes an accessor in Node class
+  @@defaultConfiguration = {
+      :leafCount => false,
+      :characterDepth => false,
+      :previousValue => false
+  }
+
   def initialize(dataSource)
     @dataSource = dataSource
+    @configuration = @@defaultConfiguration
     self.reset
   end
 
@@ -15,7 +23,9 @@ class NodeFactory
   end
 
   def setConfiguration configurationHash
-    @configuration = configurationHash
+    configurationHash.each do |key, value|
+      @configuration[key] = value
+    end
   end
 
   def newRoot()
@@ -23,6 +33,15 @@ class NodeFactory
     result = newNode
     result.children = {}
     @root = result
+    @configuration.each do |key, value|
+      if (value) then
+        @root.createAccessor(key.to_s)
+      end
+    end
+
+    # configuration controlled accessors
+    @root.characterDepth = 0 if (@configuration[:characterDepth])
+    @root.leafCount = 0 if (@configuration[:leafCount])
     return result
   end
 
@@ -32,10 +51,13 @@ class NodeFactory
   #
   def addLeaf(suffixOffset, node, value, offset)
     result = newChild(node, value)
-    result.leafCount = 1
     result.suffixOffset = suffixOffset
     result.incomingEdgeStartOffset = offset
     result.incomingEdgeEndOffset = Node::CURRENT_ENDING_OFFSET
+
+    # accessors turned on or off via factory configuration
+    result.leafCount = 1 if (@configuration[:leafCount])
+    result.previousValue = (@dataSource.valueAt(suffixOffset - 1)) if ((suffixOffset > 0) && @configuration[:previousValue])
     result
   end
 
@@ -57,8 +79,11 @@ class NodeFactory
     return child
   end
 
-  def newNode()
+  def newNode
     result = Node.new(@nextNodeId)
+
+    # newRoot defines leafCount accessor, so that case is handled in newRoot after the node is created
+    result.leafCount = 0 if (@configuration[:leafCount] && (@nextNodeId > 1))
     @nextNodeId += 1
     return result
   end

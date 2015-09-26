@@ -20,12 +20,42 @@ describe "NodeFactory class" do
     it "keeps a hash of configuration options for how nodes get built" do
       hash = {
           :generalized_suffix_tree => true,
-          :track_character_depth => false
+          :track_value_depth => true,
+#          :save_previous_value => true, for this test we verify default "false" remains
       }
       nodeFactory.setConfiguration(hash)
       configuration = nodeFactory.configuration
       expect(configuration[:generalized_suffix_tree]).to eq hash[:generalized_suffix_tree]
       expect(configuration[:track_character_depth]).to eq hash[:track_character_depth]
+      expect(configuration[:previousValue]).to eq false
+    end
+
+    it "by default does not save previous value" do
+      root = nodeFactory.newRoot
+      leaf = nodeFactory.addLeaf(1, root, 'i', 1)
+      internal = nodeFactory.splitEdgeAt(leaf, 4)
+      leaf2 = nodeFactory.addLeaf(2, internal, 'x', 7)
+      expect(defined? leaf.previousValue).to eq nil
+      expect(defined? internal.previousValue).to eq nil
+      expect(defined? leaf2.previousValue).to eq nil
+    end
+
+    it "configuration turns on previous value saving" do
+      hash = {
+          :previousValue => true
+      }
+      nodeFactory.setConfiguration(hash)
+      root = nodeFactory.newRoot
+      leaf = nodeFactory.addLeaf(0, root, 'i', 1)
+      expect(leaf.previousValue).to eq nil
+      leaf2 = nodeFactory.addLeaf(2, root, 's', 2)
+      expect(leaf2.previousValue).to eq 'i'
+      internal = nodeFactory.splitEdgeAt(leaf, 4)
+      expect(internal.previousValue).to eq nil
+      leaf3 = nodeFactory.addLeaf(9, internal, 'x', 7)
+      expect(leaf3.previousValue).to eq 'p'
+      leaf3 = nodeFactory.addLeaf(8, internal, 'x', 7)
+      expect(leaf3.previousValue).to eq 'i'
     end
   end
 

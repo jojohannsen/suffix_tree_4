@@ -12,8 +12,6 @@ class Node
   attr_accessor :parent, :suffixLink, :children
   attr_accessor :nodeId
 
-  attr_accessor :characterDepth, :leafCount
-
   def initialize(nodeId)
     @nodeId = nodeId
     @incomingEdgeStartOffset = UNSPECIFIED_OFFSET
@@ -23,9 +21,6 @@ class Node
     @parent = nil
     @suffixLink = nil
     @children = nil
-
-    @characterDepth = 0
-    @leafCount = 0
   end
 
   def isRoot
@@ -44,4 +39,10 @@ class Node
     return @incomingEdgeEndOffset - @incomingEdgeStartOffset + 1
   end
 
+  #
+  #  some algorithms require additional accessors, allow these to be created dynamically
+  #
+  def createAccessor(name)
+    self.class.send(:attr_accessor, name)
+  end
 end

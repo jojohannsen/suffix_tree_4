@@ -49,6 +49,10 @@ describe 'character depth visitor' do
 
   context "DFS traversal" do
     it "sets character depth using depth first traversal" do
+      hash = {
+          :characterDepth => true
+      }
+      stringNodeFactory.setConfiguration hash
       builder = UkkonenBuilder.new stringNodeFactory
       builder.addSourceValues
       cdv = DFS.new(CharacterDepthVisitor.new)
@@ -83,6 +87,10 @@ describe 'character depth visitor' do
 
   context "DFS traversal" do
     it "sets leaf count for suffix tree created from string" do
+      hash = {
+          :leafCount => true
+      }
+      stringNodeFactory.setConfiguration hash
       builder = UkkonenBuilder.new stringNodeFactory
       builder.addSourceValues
       self.verifyLeafCount(builder)
@@ -91,6 +99,10 @@ describe 'character depth visitor' do
 
   context "DFS traversal" do
     it "sets leaf count for suffix tree loaded from file" do
+      hash = {
+          :leafCount => true
+      }
+      fileNodeFactory.setConfiguration hash
       builder = UkkonenBuilder.new fileNodeFactory
       builder.addSourceValues
       self.verifyLeafCount(builder)
