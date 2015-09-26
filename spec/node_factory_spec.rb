@@ -57,6 +57,32 @@ describe "NodeFactory class" do
       leaf3 = nodeFactory.addLeaf(8, internal, 'x', 7)
       expect(leaf3.previousValue).to eq 'i'
     end
+
+    it "tracks character depth of nodes" do
+      hash = {
+          :valueDepth => true
+      }
+      nodeFactory.setConfiguration(hash)
+      root = nodeFactory.newRoot
+      leaf = nodeFactory.addLeaf(0, root, 'i', 1)
+      internal = nodeFactory.splitEdgeAt(leaf, 4)
+      expect(internal.valueDepth).to eq 3
+    end
+
+    it "tracks character depth of nodes" do
+      hash = {
+          :valueDepth => true
+      }
+      nodeFactory.setConfiguration(hash)
+      root = nodeFactory.newRoot
+      leaf = nodeFactory.addLeaf(0, root, 'i', 1)
+      internal = nodeFactory.splitEdgeAt(leaf, 8)
+      internal2 = nodeFactory.splitEdgeAt(internal, 4)
+      expect(internal.valueDepth).to eq 7
+      expect(internal2.valueDepth).to eq 3
+      internal3 = nodeFactory.splitEdgeAt(internal, 6)
+      expect(internal3.valueDepth).to eq 5
+    end
   end
 
   describe "#newRoot" do

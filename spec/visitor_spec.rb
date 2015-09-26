@@ -7,7 +7,7 @@ require_relative '../src/data/file_data_source'
 require_relative '../src/ukkonen_builder'
 require_relative '../src/visitor/bfs'
 require_relative '../src/visitor/leaf_count_visitor'
-require_relative '../src/visitor/character_depth_visitor'
+require_relative '../src/visitor/value_depth_visitor'
 require_relative '../src/visitor/dfs'
 require_relative '../src/visitor/node_count_visitor'
 require_relative '../src/visitor/suffix_offset_visitor'
@@ -20,54 +20,54 @@ describe 'character depth visitor' do
   let (:fileDataSource) { FileDataSource.new(File.join('spec', 'fixtures', "mississippi.txt")) }
   let (:fileNodeFactory) { NodeFactory.new fileDataSource }
 
-  def verifyCharacterDepth(root)
-    expect(root.characterDepth).to eq (0)
+  def verifyValueDepth(root)
+    expect(root.valueDepth).to eq (0)
     mChild = root.children['m']
     iChild = root.children['i']
     sChild = root.children['s']
     pChild = root.children['p']
-    expect(pChild.characterDepth).to eq (1)
-    expect(pChild.children['p'].characterDepth).to eq (Node::LEAF_DEPTH)
-    expect(pChild.children['i'].characterDepth).to eq (Node::LEAF_DEPTH)
-    expect(mChild.characterDepth).to eq (Node::LEAF_DEPTH)
-    expect(iChild.characterDepth).to eq (1)
-    expect(iChild.children['p'].characterDepth).to eq (Node::LEAF_DEPTH)
+    expect(pChild.valueDepth).to eq (1)
+    expect(pChild.children['p'].valueDepth).to eq (Node::LEAF_DEPTH)
+    expect(pChild.children['i'].valueDepth).to eq (Node::LEAF_DEPTH)
+    expect(mChild.valueDepth).to eq (Node::LEAF_DEPTH)
+    expect(iChild.valueDepth).to eq (1)
+    expect(iChild.children['p'].valueDepth).to eq (Node::LEAF_DEPTH)
     isChild = iChild.children['s']
-    expect(isChild.characterDepth).to eq (4)
-    expect(isChild.children['s'].characterDepth).to eq(Node::LEAF_DEPTH)
-    expect(isChild.children['p'].characterDepth).to eq(Node::LEAF_DEPTH)
-    expect(sChild.characterDepth).to eq (1)
+    expect(isChild.valueDepth).to eq (4)
+    expect(isChild.children['s'].valueDepth).to eq(Node::LEAF_DEPTH)
+    expect(isChild.children['p'].valueDepth).to eq(Node::LEAF_DEPTH)
+    expect(sChild.valueDepth).to eq (1)
     siChild = sChild.children['i']
     ssChild = sChild.children['s']
-    expect(siChild.characterDepth).to eq (2)
-    expect(ssChild.characterDepth).to eq (3)
-    expect(siChild.children['p'].characterDepth).to eq(Node::LEAF_DEPTH)
-    expect(siChild.children['s'].characterDepth).to eq(Node::LEAF_DEPTH)
-    expect(ssChild.children['s'].characterDepth).to eq(Node::LEAF_DEPTH)
-    expect(ssChild.children['p'].characterDepth).to eq(Node::LEAF_DEPTH)
+    expect(siChild.valueDepth).to eq (2)
+    expect(ssChild.valueDepth).to eq (3)
+    expect(siChild.children['p'].valueDepth).to eq(Node::LEAF_DEPTH)
+    expect(siChild.children['s'].valueDepth).to eq(Node::LEAF_DEPTH)
+    expect(ssChild.children['s'].valueDepth).to eq(Node::LEAF_DEPTH)
+    expect(ssChild.children['p'].valueDepth).to eq(Node::LEAF_DEPTH)
   end
 
   context "DFS traversal" do
     it "sets character depth using depth first traversal" do
       hash = {
-          :characterDepth => true
+          :valueDepth => true
       }
       stringNodeFactory.setConfiguration hash
       builder = UkkonenBuilder.new stringNodeFactory
       builder.addSourceValues
-      cdv = DFS.new(CharacterDepthVisitor.new)
+      cdv = DFS.new(ValueDepthVisitor.new)
       cdv.traverse(builder.root)
-      self.verifyCharacterDepth(builder.root)
+      self.verifyValueDepth(builder.root)
     end
   end
 
   context "BFS traversal" do
     it "sets character depth using breadth first traversal" do
-      builder = UkkonenBuilder.new stringNodeFactory
+      builder = UkkonenBuilder.new stringNodeFactory.setConfiguration( { :valueDepth => true })
       builder.addSourceValues
-      cdv = BFS.new(CharacterDepthVisitor.new)
+      cdv = BFS.new(ValueDepthVisitor.new)
       cdv.traverse(builder.root)
-      self.verifyCharacterDepth(builder.root)
+      self.verifyValueDepth(builder.root)
     end
   end
 

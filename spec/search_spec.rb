@@ -7,21 +7,26 @@ require_relative '../src/data/file_data_source'
 require_relative '../src/ukkonen_builder'
 require_relative '../src/visitor/bfs'
 require_relative '../src/visitor/leaf_count_visitor'
-require_relative '../src/visitor/character_depth_visitor'
+require_relative '../src/visitor/value_depth_visitor'
 require_relative '../src/visitor/dfs'
 require_relative '../src/visitor/node_count_visitor'
 require_relative '../src/search/searcher'
 
 describe "Search class" do
+
+  let (:dataSource) { StringDataSource.new("mississippi") }
+  let (:nodeFactory) { NodeFactory.new dataSource }
+  let (:rootNodeId) { nodeFactory.nextNodeId }
+  let (:fileDataSource) { FileDataSource.new(File.join('spec', 'fixtures', "mississippi.txt")) }
+  let (:fileNodeFactory) { NodeFactory.new fileDataSource }
+
   describe '#find' do
 
-    let (:dataSource) { StringDataSource.new("mississippi") }
-    let (:nodeFactory) { NodeFactory.new dataSource }
-    let (:rootNodeId) { nodeFactory.nextNodeId }
-    let (:fileDataSource) { FileDataSource.new(File.join('spec', 'fixtures', "mississippi.txt")) }
-    let (:fileNodeFactory) { NodeFactory.new fileDataSource }
-
     it 'finds all substrings' do
+      hash = {
+          :valueDepth => true
+      }
+      nodeFactory.setConfiguration(hash)
       builder = UkkonenBuilder.new nodeFactory
       builder.addSourceValues
       searcher = Searcher.new(dataSource, builder.root)
@@ -84,6 +89,7 @@ describe "Search class" do
     end
 
     it 'finds all substrings' do
+      fileNodeFactory.setConfiguration( { :valueDepth => true })
       builder = UkkonenBuilder.new fileNodeFactory
       builder.addSourceValues
       builder.addValue('m')
@@ -146,6 +152,20 @@ describe "Search class" do
       expect(searcher.find("mississipp")).to eq ([0])
       expect(searcher.find("ississippi")).to eq ([1])
       expect(searcher.find("mississippi")).to eq ([0])
+    end
+  end
+
+  describe "#matchDataSource" do
+    it "returns root location if nothing matches" do
+      nodeFactory.setConfiguration( { :valueDepth => true })
+      builder = UkkonenBuilder.new nodeFactory
+      builder.addSourceValues
+      searcher = Searcher.new(dataSource, builder.root)
+      xDataSource = StringDataSource.new("xxx")
+      location = searcher.matchDataSource(xDataSource)
+      expect(location.onNode).to eq true
+      expect(location.node).to eq builder.root
+      expect(location.depth).to eq 0
     end
   end
 end

@@ -1,4 +1,6 @@
-class StringDataSource
+require_relative 'base_data_source'
+
+class StringDataSource < BaseDataSource
   def initialize(s)
     @s = s
   end

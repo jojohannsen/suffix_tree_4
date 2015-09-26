@@ -119,24 +119,26 @@ class Location
     end
   end
 
-  def matchString(dataSource, s)
-    s.each_char.with_index(0) do |cval, index|
-      if (!self.matchChar(dataSource, cval)) then
-        return index
+  def matchDataSource(dataSource, matchThis)
+    matchThis.each_with_index do |value, index|
+      if (!self.matchValue(dataSource, value)) then
+        break
       end
     end
-    return s.length
+    self
   end
 
-  def matchChar(dataSource, cval)
+  def matchValue(dataSource, value)
     if (@onNode) then
-      if ((@node.children != nil) && (@node.children.has_key?(cval)))
-        self.traverseDownChildValue(cval)
+      if (@node.children.has_key?(value)) then
+        self.traverseDownChildValue(value)
         return true
       end
-    elsif (dataSource.valueAt(@incomingEdgeOffset) == cval) then
-      self.traverseDownEdgeValue
-      return true
+    else
+      if (dataSource.valueAt(@incomingEdgeOffset) == value) then
+        self.traverseDownEdgeValue()
+        return true
+      end
     end
     return false
   end
@@ -148,9 +150,9 @@ class Location
   #
   def depth
     if (@onNode) then
-      return @node.characterDepth
+      return @node.valueDepth
     else
-      return @node.parent.characterDepth + @incomingEdgeOffset - @node.incomingEdgeStartOffset
+      return @node.parent.valueDepth + @incomingEdgeOffset - @node.incomingEdgeStartOffset
     end
   end
 

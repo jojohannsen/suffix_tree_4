@@ -5,16 +5,13 @@ class NodeFactory
   attr_reader :dataSource
   attr_reader :configuration
 
-  # any configuration value set to true here becomes an accessor in Node class
-  @@defaultConfiguration = {
-      :leafCount => false,
-      :characterDepth => false,
-      :previousValue => false
-  }
-
   def initialize(dataSource)
     @dataSource = dataSource
-    @configuration = @@defaultConfiguration
+    @configuration = {
+        :leafCount => false,
+        :valueDepth => false,
+        :previousValue => false
+    }
     self.reset
   end
 
@@ -26,6 +23,7 @@ class NodeFactory
     configurationHash.each do |key, value|
       @configuration[key] = value
     end
+    self
   end
 
   def newRoot()
@@ -40,7 +38,7 @@ class NodeFactory
     end
 
     # configuration controlled accessors
-    @root.characterDepth = 0 if (@configuration[:characterDepth])
+    @root.valueDepth = 0 if (@configuration[:valueDepth])
     @root.leafCount = 0 if (@configuration[:leafCount])
     return result
   end
@@ -55,7 +53,7 @@ class NodeFactory
     result.incomingEdgeStartOffset = offset
     result.incomingEdgeEndOffset = Node::CURRENT_ENDING_OFFSET
 
-    # accessors turned on or off via factory configuration
+    # optional configuration based properties
     result.leafCount = 1 if (@configuration[:leafCount])
     result.previousValue = (@dataSource.valueAt(suffixOffset - 1)) if ((suffixOffset > 0) && @configuration[:previousValue])
     result
@@ -68,6 +66,9 @@ class NodeFactory
     result.suffixOffset = node.suffixOffset
     node.incomingEdgeStartOffset = incomingEdgeOffset
     addChild(result, @dataSource.valueAt(incomingEdgeOffset), node)
+
+    # optional configuration based properties
+    result.valueDepth = (result.parent.valueDepth + result.incomingEdgeLength) if @configuration[:valueDepth]
     return result
   end
 

@@ -1,11 +1,11 @@
 require_relative '../node'
 
-class CharacterDepthVisitor
+class ValueDepthVisitor
   def preVisit(node)
     if (node.isInternal) then
-      node.characterDepth = node.parent.characterDepth + node.incomingEdgeLength
+      node.valueDepth = node.parent.valueDepth + node.incomingEdgeLength
     elsif (node.isLeaf) then
-      node.characterDepth = Node::LEAF_DEPTH
+      node.valueDepth = Node::LEAF_DEPTH
     end
     return true
   end

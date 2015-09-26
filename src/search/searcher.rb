@@ -15,10 +15,18 @@ class Searcher
     @root = treeRoot
   end
 
+  #
+  #  match dataSource values, return location in the suffix tree where the match stopped
+  #
+  def matchDataSource(dataSource)
+    location = Location.new(@root)
+    location.matchDataSource(@dataSource, dataSource)
+    location
+  end
 
   def find(s)
     location = Location.new(@root)
-    if (location.matchString(@dataSource, s) == s.length) then
+    if (location.matchDataSource(@dataSource, StringDataSource.new(s)).depth == s.length) then
       soCollector = SuffixOffsetVisitor.new
       so = BFS.new(soCollector)
       so.traverse(location.node)
