@@ -9,10 +9,6 @@ class StringDataSource < BaseDataSource
     return @s[offset]
   end
 
-  def stringValue
-    return @s
-  end
-
   # substring
   def toString(startOffset, endOffset)
     if (endOffset >= startOffset) then

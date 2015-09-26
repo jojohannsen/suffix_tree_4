@@ -15,7 +15,7 @@ class UkkonenBuilder
   end
 
   def addSourceValues
-    @dataSource.stringValue.each_char.with_index(0) do |cval, offset|
+    @dataSource.each_with_index(0) do |cval, offset|
       self.add(cval, offset)
     end
   end
