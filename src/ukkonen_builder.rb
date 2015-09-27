@@ -8,16 +8,26 @@ class UkkonenBuilder
   def initialize nodeFactory
     @nodeFactory = nodeFactory
     @dataSource = @nodeFactory.dataSource
-    @root = @nodeFactory.newRoot()
+    @root = @nodeFactory.newRoot
     @location = Location.new(@root)
     @suffixLinker = SuffixLinker.new
     @suffixOffset = 0
+    @startOffset = 0
   end
 
   def addSourceValues
-    @dataSource.each_with_index(0) do |cval, offset|
+    @dataSource.each_with_index(@startOffset) do |cval, offset|
       self.add(cval, offset)
     end
+  end
+
+  #
+  #  This is used to create generalized suffix tree, iff the NodeFactory has :dataSourceBit set
+  #
+  def newDataSource(dataSource)
+    @startOffset = @lastOffsetAdded + 1
+    @nodeFactory.newDataSource
+    @dataSource.extendWith(dataSource, @startOffset)
   end
 
   def addValue(value)

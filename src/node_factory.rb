@@ -10,13 +10,18 @@ class NodeFactory
     @configuration = {
         :leafCount => false,
         :valueDepth => false,
-        :previousValue => false
+        :previousValue => false,
+        :dataSourceBit => false
     }
     self.reset
   end
 
   def reset
     @nextNodeId = 1
+  end
+
+  def newDataSource
+    @dataSourceBit = (@dataSourceBit << 1) if @configuration[:dataSourceBit]
   end
 
   def setConfiguration configurationHash
@@ -26,7 +31,7 @@ class NodeFactory
     self
   end
 
-  def newRoot()
+  def newRoot
     self.reset
     result = newNode
     result.children = {}
@@ -38,8 +43,10 @@ class NodeFactory
     end
 
     # configuration controlled accessors
-    @root.valueDepth = 0 if (@configuration[:valueDepth])
-    @root.leafCount = 0 if (@configuration[:leafCount])
+    @root.valueDepth = 0 if @configuration[:valueDepth]
+    @root.leafCount = 0 if @configuration[:leafCount]
+    @dataSourceBit = 1 if @configuration[:dataSourceBit]
+    @root.dataSourceBit = @dataSourceBit if @configuration[:dataSourceBit]
     return result
   end
 
@@ -56,6 +63,7 @@ class NodeFactory
     # optional configuration based properties
     result.leafCount = 1 if (@configuration[:leafCount])
     result.previousValue = (@dataSource.valueAt(suffixOffset - 1)) if ((suffixOffset > 0) && @configuration[:previousValue])
+    result.dataSourceBit = @dataSourceBit if @configuration[:dataSourceBit]
     result
   end
 
@@ -69,22 +77,26 @@ class NodeFactory
 
     # optional configuration based properties
     result.valueDepth = (result.parent.valueDepth + result.incomingEdgeLength) if @configuration[:valueDepth]
+    result.dataSourceBit = (node.dataSourceBit | @dataSourceBit) if @configuration[:dataSourceBit]
     return result
   end
 
   #
   # return a string of all values on the path to this node
   #
-  def valuePath(node)
+  def valuePath(node, delimiter=' ')
     result = []
     while (node.parent != nil) do
       addValues(result, node.incomingEdgeStartOffset, node.incomingEdgeEndOffset)
       node = node.parent
     end
     result.reverse!
-    return result.join(" ")
+    return result.join(delimiter)
   end
 
+  #
+  # internal private methods
+  #
   private
 
   def addValues(result, startOffset, endOffset)
@@ -111,6 +123,7 @@ class NodeFactory
 
     # newRoot defines leafCount accessor, so that case is handled in newRoot after the node is created
     result.leafCount = 0 if (@configuration[:leafCount] && (@nextNodeId > 1))
+    result.dataSourceBit = @dataSourceBit if (@configuration[:dataSourceBit] && (@nextNodeId > 1))
     @nextNodeId += 1
     return result
   end
@@ -122,4 +135,5 @@ class NodeFactory
     parentNode.children[value] = childNode
     childNode.parent = parentNode
   end
+
 end

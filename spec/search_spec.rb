@@ -167,5 +167,19 @@ describe "Search class" do
       expect(location.node).to eq builder.root
       expect(location.depth).to eq 0
     end
+
+    it "finds location that we can use to get suffix offset" do
+      nodeFactory.setConfiguration( { :valueDepth => true })
+      builder = UkkonenBuilder.new nodeFactory
+      builder.addSourceValues
+      builder.addValue('$')
+      searcher = Searcher.new(dataSource, builder.root)
+      location = searcher.matchDataSource(StringDataSource.new "i")
+      result = []
+      location.node.each_suffix do |suffixOffset|
+        result << suffixOffset
+      end
+      expect(result).to eq [ 10, 7, 4, 1 ]
+    end
   end
 end

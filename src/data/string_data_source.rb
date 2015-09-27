@@ -1,12 +1,18 @@
 require_relative 'base_data_source'
 
 class StringDataSource < BaseDataSource
+
   def initialize(s)
     @s = s
+    super()
   end
 
   def valueAt(offset)
-    return @s[offset]
+    if (@s[offset] == nil) then
+      return self.nextDataSourceValueAt(offset)
+    else
+      return @s[offset]
+    end
   end
 
   # substring

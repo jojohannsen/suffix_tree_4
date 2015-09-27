@@ -45,4 +45,19 @@ class Node
   def createAccessor(name)
     self.class.send(:attr_accessor, name)
   end
+
+  #
+  #  suffix offset enumerator (not sure this belongs here)
+  #
+  def each_suffix
+    if (self.isLeaf) then
+      yield suffixOffset
+    else
+      children.keys.sort.each do |key|
+        children[key].each_suffix do |suffixOffset|
+          yield suffixOffset
+        end
+      end
+    end
+  end
 end

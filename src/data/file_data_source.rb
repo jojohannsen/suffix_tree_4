@@ -8,6 +8,10 @@ class FileDataSource < BaseDataSource
 
   def valueAt(offset)
     @checkFile.seek(offset, IO::SEEK_SET)
-    return @checkFile.getc
+    result = @checkFile.getc
+    if (result == nil) then
+      return self.nextDataSourceValueAt(offset)
+    end
+    result
   end
 end

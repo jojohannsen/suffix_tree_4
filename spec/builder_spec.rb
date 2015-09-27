@@ -5,6 +5,7 @@ require_relative '../src/data/string_data_source'
 require_relative '../src/data/word_data_source'
 require_relative '../src/ukkonen_builder'
 require_relative '../src/visitor/dfs'
+require_relative '../src/visitor/data_source_visitor'
 require_relative '../src/visitor/leaf_count_visitor'
 require_relative '../src/visitor/value_depth_visitor'
 
@@ -170,6 +171,64 @@ describe 'Suffix tree builder' do
       dfs = DFS.new(deepVal)
       dfs.traverse(builder.root)
       expect(nodeFactory.valuePath(deepVal.deepestValueDepthNode)).to eq "my father s thumb"
+    end
+  end
+
+  describe "suffix array tests" do
+    it "converts tree to suffix array" do
+      dataSource = StringDataSource.new "mississippi$"
+      nodeFactory = NodeFactory.new dataSource
+      builder = UkkonenBuilder.new nodeFactory
+      builder.addSourceValues
+      suffix_array = []
+      builder.root.each_suffix do |suffixOffset|
+        suffix_array << suffixOffset
+      end
+      expect(suffix_array).to eq [11, 10, 7, 4, 1, 0, 9, 8, 6, 3, 5, 2]
+    end
+  end
+
+  describe "builds generalized suffix trees" do
+    let(:alphaDataSource) { StringDataSource.new "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqr" }
+    let(:alphaNodeFactory) { NodeFactory.new alphaDataSource }
+    let(:secondDataSource) { StringDataSource.new "asjdfkjaskdjfkajlxxxxxxxjklmnopqrstuvwxyzabcsdf;laksjdf aksjd"}
+
+    it "builds generalized suffix tree" do
+      nodeFactory = NodeFactory.new alphaDataSource
+      nodeFactory.setConfiguration( {:valueDepth => true})
+      builder = UkkonenBuilder.new nodeFactory
+      builder.addSourceValues
+      builder.newDataSource secondDataSource
+      builder.addSourceValues
+      deepVal = DeepestValueDepthVisitor.new
+      dfs = DFS.new(deepVal)
+      dfs.traverse(builder.root)
+      expect(nodeFactory.valuePath(deepVal.deepestValueDepthNode,'')).to eq "jklmnopqrstuvwxyzabc"
+    end
+
+    let(:src1) { StringDataSource.new "abcd" }
+    let(:src2) { StringDataSource.new "cxyz" }
+
+    it "sets data source" do
+      nodeFactory = NodeFactory.new src1
+      nodeFactory.setConfiguration( {:valueDepth => true, :dataSourceBit => true})
+      builder = UkkonenBuilder.new nodeFactory
+      builder.addSourceValues
+      builder.newDataSource src2
+      builder.addSourceValues
+      deepVal = DeepestValueDepthVisitor.new
+      dfs = DFS.new(deepVal)
+      dfs.traverse(builder.root)
+      expect(nodeFactory.valuePath(deepVal.deepestValueDepthNode,'')).to eq "c"
+      dataSourceVisitor = DataSourceVisitor.new
+      dfs = DFS.new(dataSourceVisitor)
+      dfs.traverse(builder.root)
+      expect(deepVal.deepestValueDepthNode.dataSourceBit).to eq 3
+      expect(builder.root.dataSourceBit).to eq 3
+      expect(builder.root.children['a'].dataSourceBit).to eq 1
+      expect(builder.root.children['x'].dataSourceBit).to eq 2
+      expect(deepVal.deepestValueDepthNode.children['d'].dataSourceBit).to eq 1
+      expect(deepVal.deepestValueDepthNode.children['x'].dataSourceBit).to eq 2
     end
   end
 end
