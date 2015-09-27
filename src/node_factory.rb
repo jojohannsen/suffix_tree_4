@@ -72,11 +72,37 @@ class NodeFactory
     return result
   end
 
+  #
+  # return a string of all values on the path to this node
+  #
+  def valuePath(node)
+    result = []
+    while (node.parent != nil) do
+      addValues(result, node.incomingEdgeStartOffset, node.incomingEdgeEndOffset)
+      node = node.parent
+    end
+    result.reverse!
+    return result.join(" ")
+  end
+
   private
+
+  def addValues(result, startOffset, endOffset)
+    if (endOffset == Node::CURRENT_ENDING_OFFSET) then
+      result << @dataSource.valueAt(startOffset)
+    else
+      scanner = endOffset
+      while (scanner >= startOffset) do
+        result << @dataSource.valueAt(scanner)
+        scanner -= 1
+      end
+    end
+  end
 
   def newChild(node, key)
     child = newNode
     addChild(node, key, child)
+    child.valueDepth = 0 if @configuration[:valueDepth]
     return child
   end
 

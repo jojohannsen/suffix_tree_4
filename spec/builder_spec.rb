@@ -2,7 +2,11 @@ require 'rspec'
 require_relative '../src/location'
 require_relative '../src/node'
 require_relative '../src/data/string_data_source'
+require_relative '../src/data/word_data_source'
 require_relative '../src/ukkonen_builder'
+require_relative '../src/visitor/dfs'
+require_relative '../src/visitor/leaf_count_visitor'
+require_relative '../src/visitor/value_depth_visitor'
 
 describe 'Suffix tree builder' do
 
@@ -151,4 +155,21 @@ describe 'Suffix tree builder' do
     end
   end
 
+  describe "using word data source" do
+    it "builds suffix tree of words" do
+      wordDataSource = WordDataSource.new File.join('spec', 'fixtures', "chapter1.txt")
+      nodeFactory = NodeFactory.new wordDataSource
+      nodeFactory.setConfiguration( { :leafCount => true, :valueDepth => true })
+      builder = UkkonenBuilder.new nodeFactory
+      builder.addSourceValues
+      root = builder.root
+      expect(root.nodeId).to eq 1
+      lcv = DFS.new(LeafCountVisitor.new)
+      lcv.traverse(builder.root)
+      deepVal = DeepestValueDepthVisitor.new
+      dfs = DFS.new(deepVal)
+      dfs.traverse(builder.root)
+      expect(nodeFactory.valuePath(deepVal.deepestValueDepthNode)).to eq "my father s thumb"
+    end
+  end
 end

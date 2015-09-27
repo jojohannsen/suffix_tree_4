@@ -1,6 +1,8 @@
-class LeafCountVisitor
-  def preVisit(node)
-    return true
+require_relative 'base_visitor'
+
+class LeafCountVisitor < BaseVisitor
+  def initialize
+    super
   end
 
   def postVisit(node)

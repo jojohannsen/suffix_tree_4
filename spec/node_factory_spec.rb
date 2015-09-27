@@ -58,7 +58,7 @@ describe "NodeFactory class" do
       expect(leaf3.previousValue).to eq 'i'
     end
 
-    it "tracks character depth of nodes" do
+    it "tracks value depth of nodes" do
       hash = {
           :valueDepth => true
       }
@@ -69,12 +69,12 @@ describe "NodeFactory class" do
       expect(internal.valueDepth).to eq 3
     end
 
-    it "tracks character depth of nodes" do
-      hash = {
-          :valueDepth => true
-      }
-      nodeFactory.setConfiguration(hash)
+    it "tracks value depth of nodes" do
+      nodeFactory.setConfiguration({
+                                       :valueDepth => true
+                                   })
       root = nodeFactory.newRoot
+      expect(root.valueDepth).to eq 0
       leaf = nodeFactory.addLeaf(0, root, 'i', 1)
       internal = nodeFactory.splitEdgeAt(leaf, 8)
       internal2 = nodeFactory.splitEdgeAt(internal, 4)

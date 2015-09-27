@@ -146,7 +146,7 @@ class Location
   #
   #  get the depth of the location
   #
-  #  Requires the tree nodes all have character depth
+  #  Requires nodes with "valueDepth" property (nodeFactory with :valueDepth=>true, followed by traversal with ValueDepthVisitor)
   #
   def depth
     if (@onNode) then
