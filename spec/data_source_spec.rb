@@ -27,6 +27,7 @@ describe 'reads data sources' do
       expect(sd1.valueAt(0)).to eq "a"
       expect(sd1.valueAt(1)).to eq "b"
       expect(sd1.valueAt(2)).to eq "c"
+      val = sd1.valueAt(3)
       expect(sd1.valueAt(3)).to eq "d"
       expect(sd1.valueAt(4)).to eq "e"
       expect(sd1.valueAt(5)).to eq "f"

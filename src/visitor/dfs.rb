@@ -6,8 +6,8 @@ class DFS
   def traverse(node)
     if (@visitor.preVisit(node)) then
       if (node.children != nil)
-        node.children.values.each do |child|
-          self.traverse(child)
+        node.children.each do |key,value|
+          self.traverse(value)
         end
       end
       @visitor.postVisit(node)

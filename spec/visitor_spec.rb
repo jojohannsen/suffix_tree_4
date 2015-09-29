@@ -6,6 +6,8 @@ require_relative '../src/data/string_data_source'
 require_relative '../src/data/file_data_source'
 require_relative '../src/ukkonen_builder'
 require_relative '../src/visitor/bfs'
+require_relative '../src/visitor/data_source_visitor'
+require_relative '../src/visitor/k_common_visitor'
 require_relative '../src/visitor/leaf_count_visitor'
 require_relative '../src/visitor/value_depth_visitor'
 require_relative '../src/visitor/dfs'
@@ -138,6 +140,48 @@ describe 'character depth visitor' do
       builder.addSourceValues
       so.traverse(builder.root)
       expect(soCollector.result.sort).to eq ([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ])
+    end
+  end
+
+  describe "generalized suffix tree" do
+    let(:s1) { StringDataSource.new "sandollar$" }
+    let(:s2) { StringDataSource.new "sandlot$" }
+    let(:s3) { StringDataSource.new "handler$" }
+    let(:s4) { StringDataSource.new "grand$" }
+    let(:s5) { StringDataSource.new "pantry$" }
+
+    it "KCommonVisitor finds longest substring common to k strings" do
+      # make the generalized suffix tree
+      nodeFactory = NodeFactory.new s1
+      nodeFactory.setConfiguration( {:valueDepth => true, :dataSourceBit => true})
+      builder = UkkonenBuilder.new nodeFactory
+      builder.addSourceValues
+      builder.newDataSource s2
+      builder.addSourceValues
+      builder.newDataSource s3
+      builder.addSourceValues
+      builder.newDataSource s4
+      builder.addSourceValues
+      builder.newDataSource s5
+      builder.addSourceValues
+      dataSourceVisitor = DataSourceVisitor.new
+      dfs = DFS.new(dataSourceVisitor)
+      dfs.traverse(builder.root)
+      kCommonVisitor = KCommonVisitor.new(s1)
+      dfs = DFS.new(kCommonVisitor)
+      dfs.traverse(builder.root)
+      longestLength,sample = kCommonVisitor.longestStringCommonTo(2)
+      expect(longestLength).to eq 4
+      expect(sample).to eq "sand"
+      longestLength,sample = kCommonVisitor.longestStringCommonTo(3)
+      expect(longestLength).to eq 3
+      expect(sample).to eq "and"
+      longestLength,sample = kCommonVisitor.longestStringCommonTo(4)
+      expect(longestLength).to eq 3
+      expect(sample).to eq "and"
+      longestLength,sample = kCommonVisitor.longestStringCommonTo(5)
+      expect(longestLength).to eq 2
+      expect(sample).to eq "an"
     end
   end
 end

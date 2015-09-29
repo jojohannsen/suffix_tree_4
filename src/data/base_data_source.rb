@@ -1,13 +1,23 @@
 class BaseDataSource
-  def initialize
+  attr_accessor :startOffset
+
+  def initialize(startOffset = 0)
     @nextDataSource = nil
-    @nextDataSourceStartOffset = 0
+    @startOffset = startOffset
+  end
+
+  def valueSequence(startOffset, endOffset)
+    result = ""
+    (startOffset..endOffset).each do |offset|
+      result += self.valueAt(offset)
+    end
+    result
   end
 
   def extendWith(dataSource, startOffset)
     if (@nextDataSource == nil) then
       @nextDataSource = dataSource
-      @nextDataSourceStartOffset = startOffset
+      dataSource.startOffset = startOffset
     else
       @nextDataSource.extendWith(dataSource, startOffset)
     end
@@ -15,7 +25,7 @@ class BaseDataSource
 
   def nextDataSourceValueAt(offset)
     if (@nextDataSource != nil) then
-      return @nextDataSource.valueAt(offset - @nextDataSourceStartOffset)
+      return @nextDataSource.valueAt(offset)
     else
       return nil
     end

@@ -8,10 +8,11 @@ class StringDataSource < BaseDataSource
   end
 
   def valueAt(offset)
-    if (@s[offset] == nil) then
+    value = @s[ offset - @startOffset ]
+    if (value == nil) then
       return self.nextDataSourceValueAt(offset)
     else
-      return @s[offset]
+      return value
     end
   end
 
