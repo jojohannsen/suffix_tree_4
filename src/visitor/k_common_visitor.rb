@@ -15,9 +15,6 @@ end
 
 class KCommonVisitor < BaseVisitor
 
-  START_OFFSET = 0
-  END_OFFSET = 1
-
   def initialize(dataSource)
     @dataSource = dataSource
 

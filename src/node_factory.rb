@@ -7,6 +7,7 @@ class NodeFactory
 
   def initialize(dataSource)
     @dataSource = dataSource
+    @suffixOffset = 0
     @configuration = {
         :leafCount => false,
         :valueDepth => false,
@@ -20,8 +21,13 @@ class NodeFactory
     @nextNodeId = 1
   end
 
-  def newDataSource
-    @dataSourceBit = (@dataSourceBit << 1) if @configuration[:dataSourceBit]
+  def extendDataSource(dataSource, startOffset)
+    @dataSourceBit = (@dataSourceBit << 1) if ((@configuration[:dataSourceBit]) && (@dataSource != nil))
+    if (@dataSource == nil) then
+      @dataSource = dataSource
+    else
+      @dataSource.extendWith(dataSource, startOffset)
+    end
   end
 
   def setConfiguration configurationHash
@@ -54,16 +60,18 @@ class NodeFactory
   #
   #  The algorithm adds leaf nodes in order
   #
-  def addLeaf(suffixOffset, node, value, offset)
+  def addLeaf(node, value, offset)
     result = newChild(node, value)
-    result.suffixOffset = suffixOffset
+    result.suffixOffset = @suffixOffset
+
     result.incomingEdgeStartOffset = offset
     result.incomingEdgeEndOffset = Node::CURRENT_ENDING_OFFSET
 
     # optional configuration based properties
     result.leafCount = 1 if (@configuration[:leafCount])
-    result.previousValue = (@dataSource.valueAt(suffixOffset - 1)) if ((suffixOffset > 0) && @configuration[:previousValue])
+    result.previousValue = (@dataSource.valueAt(@suffixOffset - 1)) if ((@suffixOffset > 0) && @configuration[:previousValue])
     result.dataSourceBit = @dataSourceBit if @configuration[:dataSourceBit]
+    @suffixOffset += 1
     result
   end
 

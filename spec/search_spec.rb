@@ -4,13 +4,13 @@ require_relative '../src/node'
 require_relative '../src/node_factory'
 require_relative '../src/data/string_data_source'
 require_relative '../src/data/file_data_source'
-require_relative '../src/ukkonen_builder'
 require_relative '../src/visitor/bfs'
 require_relative '../src/visitor/leaf_count_visitor'
 require_relative '../src/visitor/value_depth_visitor'
 require_relative '../src/visitor/dfs'
 require_relative '../src/visitor/node_count_visitor'
 require_relative '../src/search/searcher'
+require_relative '../src/suffix_tree'
 
 describe "Search class" do
 
@@ -26,10 +26,10 @@ describe "Search class" do
       hash = {
           :valueDepth => true
       }
-      nodeFactory.setConfiguration(hash)
-      builder = UkkonenBuilder.new nodeFactory
-      builder.addSourceValues
-      searcher = Searcher.new(dataSource, builder.root)
+      st = SuffixTree.new(nil, hash)
+      st.addDataSource(dataSource)
+
+      searcher = Searcher.new(dataSource, st.root)
       expect(searcher.find("m")).to eq ([0])
       expect(searcher.find("i")).to eq ([1,4,7])
       expect(searcher.find("s")).to eq ([2,3,5,6])
@@ -89,13 +89,13 @@ describe "Search class" do
     end
 
     it 'finds all substrings' do
-      fileNodeFactory.setConfiguration( { :valueDepth => true })
-      builder = UkkonenBuilder.new fileNodeFactory
-      builder.addSourceValues
-      builder.addValue('m')
-      builder.addValue('i')
-      builder.addValue('$')
-      searcher = Searcher.new(dataSource, builder.root)
+      st = SuffixTree.new(nil, { :valueDepth => true })
+      st.addDataSource(fileDataSource)
+
+      st.addValue('m',11)
+      st.addValue('i',12)
+      st.addValue('$',13)
+      searcher = Searcher.new(dataSource, st.root)
       expect(searcher.find("m")).to eq ([0,11])         # 2 m's now
       expect(searcher.find("i")).to eq ([1,4,7,10,12])  # final "i" of mississippi now explicit, and there's another as well
       expect(searcher.find("s")).to eq ([2,3,5,6])
@@ -157,23 +157,20 @@ describe "Search class" do
 
   describe "#matchDataSource" do
     it "returns root location if nothing matches" do
-      nodeFactory.setConfiguration( { :valueDepth => true })
-      builder = UkkonenBuilder.new nodeFactory
-      builder.addSourceValues
-      searcher = Searcher.new(dataSource, builder.root)
+      st = SuffixTree.new(nil, { :valueDepth => true })
+      st.addDataSource(dataSource)
+      searcher = Searcher.new(dataSource, st.root)
       xDataSource = StringDataSource.new("xxx")
       location = searcher.matchDataSource(xDataSource)
       expect(location.onNode).to eq true
-      expect(location.node).to eq builder.root
+      expect(location.node).to eq st.root
       expect(location.depth).to eq 0
     end
 
     it "finds location that we can use to get suffix offset" do
-      nodeFactory.setConfiguration( { :valueDepth => true })
-      builder = UkkonenBuilder.new nodeFactory
-      builder.addSourceValues
-      builder.addValue('$')
-      searcher = Searcher.new(dataSource, builder.root)
+      st = SuffixTree.new('$', { :valueDepth => true })
+      st.addDataSource(dataSource)
+      searcher = Searcher.new(dataSource, st.root)
       location = searcher.matchDataSource(StringDataSource.new "i")
       result = []
       location.node.each_suffix do |suffixOffset|

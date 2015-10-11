@@ -1,6 +1,5 @@
 require_relative '../src/node'
 require_relative '../src/node_factory'
-require_relative '../src/ukkonen_builder'
 require_relative '../src/data/data_source_factory'
 require_relative '../src/visitor/dfs'
 require_relative '../src/visitor/tree_print_visitor'
@@ -100,10 +99,9 @@ class Cli
       elsif (!@data.has_key?(data[2])) then
         print "Data '#{data[2]}' is not defined\n"
       else
-        nodeFactory = NodeFactory.new
-        builder = UkkonenBuilder.new(@data[data[2]], nodeFactory)
-        builder.addSourceValues
-        @trees[data[1]] = builder.root
+        st = SuffixTree.new
+        st.addDataSource(@data[data[2]])
+        @trees[data[1]] = st
         @treeData[data[1]] = @data[data[2]]
       end
     else

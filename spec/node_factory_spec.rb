@@ -6,18 +6,19 @@ require_relative '../src/data/string_data_source'
 describe "NodeFactory class" do
 
   let(:dataSource) { StringDataSource.new "mississippi" }
-  let(:nodeFactory) { NodeFactory.new dataSource }
   let(:alphaDataSource) { StringDataSource.new "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" }
   let(:alphaNodeFactory) { NodeFactory.new alphaDataSource }
 
   describe '#initialize' do
     it "accepts a dataSource" do
+      nodeFactory = NodeFactory.new dataSource
       expect(nodeFactory.dataSource).to eq dataSource
     end
   end
 
   describe '#configure' do
     it "keeps a hash of configuration options for how nodes get built" do
+      nodeFactory = NodeFactory.new dataSource
       hash = {
           :generalized_suffix_tree => true,
           :track_value_depth => true,
@@ -31,51 +32,61 @@ describe "NodeFactory class" do
     end
 
     it "by default does not save previous value" do
+      nodeFactory = NodeFactory.new dataSource
       root = nodeFactory.newRoot
-      leaf = nodeFactory.addLeaf(1, root, 'i', 1)
+      leaf = nodeFactory.addLeaf(root, 'i', 1)
       internal = nodeFactory.splitEdgeAt(leaf, 4)
-      leaf2 = nodeFactory.addLeaf(2, internal, 'x', 7)
+      leaf2 = nodeFactory.addLeaf(internal, 'x', 7)
       expect(defined? leaf.previousValue).to eq nil
       expect(defined? internal.previousValue).to eq nil
       expect(defined? leaf2.previousValue).to eq nil
     end
 
     it "configuration turns on previous value saving" do
+      nodeFactory = NodeFactory.new dataSource
       hash = {
           :previousValue => true
       }
       nodeFactory.setConfiguration(hash)
       root = nodeFactory.newRoot
-      leaf = nodeFactory.addLeaf(0, root, 'i', 1)
+      leaf = nodeFactory.addLeaf(root, 'm', 0)
       expect(leaf.previousValue).to eq nil
-      leaf2 = nodeFactory.addLeaf(2, root, 's', 2)
+
+      leaf = nodeFactory.addLeaf(root, 'i', 1)
+      expect(leaf.previousValue).to eq 'm'
+
+      leaf2 = nodeFactory.addLeaf(root, 's', 2)
       expect(leaf2.previousValue).to eq 'i'
+
       internal = nodeFactory.splitEdgeAt(leaf, 4)
       expect(internal.previousValue).to eq nil
-      leaf3 = nodeFactory.addLeaf(9, internal, 'x', 7)
-      expect(leaf3.previousValue).to eq 'p'
-      leaf3 = nodeFactory.addLeaf(8, internal, 'x', 7)
-      expect(leaf3.previousValue).to eq 'i'
+
+      leaf3 = nodeFactory.addLeaf(internal, 'x', 7)
+      expect(leaf3.previousValue).to eq 's'
+      leaf3 = nodeFactory.addLeaf(internal, 'x', 7)
+      expect(leaf3.previousValue).to eq 's'
     end
 
     it "tracks value depth of nodes" do
+      nodeFactory = NodeFactory.new dataSource
       hash = {
           :valueDepth => true
       }
       nodeFactory.setConfiguration(hash)
       root = nodeFactory.newRoot
-      leaf = nodeFactory.addLeaf(0, root, 'i', 1)
+      leaf = nodeFactory.addLeaf(root, 'i', 1)
       internal = nodeFactory.splitEdgeAt(leaf, 4)
       expect(internal.valueDepth).to eq 3
     end
 
     it "tracks value depth of nodes" do
+      nodeFactory = NodeFactory.new dataSource
       nodeFactory.setConfiguration({
                                        :valueDepth => true
                                    })
       root = nodeFactory.newRoot
       expect(root.valueDepth).to eq 0
-      leaf = nodeFactory.addLeaf(0, root, 'i', 1)
+      leaf = nodeFactory.addLeaf(root, 'i', 1)
       internal = nodeFactory.splitEdgeAt(leaf, 8)
       internal2 = nodeFactory.splitEdgeAt(internal, 4)
       expect(internal.valueDepth).to eq 7
@@ -87,6 +98,7 @@ describe "NodeFactory class" do
 
   describe "#newRoot" do
     it "creates a new root node with node_id=1" do
+      nodeFactory = NodeFactory.new dataSource
       root = nodeFactory.newRoot
       expect(root.nodeId).to eq 1
       expect(root.children.length).to eq 0
@@ -94,6 +106,7 @@ describe "NodeFactory class" do
     end
 
     it "resets each time newRoot is called" do
+      nodeFactory = NodeFactory.new dataSource
       root1 = nodeFactory.newRoot
       root2 = nodeFactory.newRoot
       expect(root1.nodeId).to eq 1
@@ -103,8 +116,9 @@ describe "NodeFactory class" do
 
   describe "#addLeaf" do
     it "adds a leaf node" do
+      nodeFactory = NodeFactory.new dataSource
       root = nodeFactory.newRoot
-      child = nodeFactory.addLeaf(0, root, 'a', 3)
+      child = nodeFactory.addLeaf(root, 'a', 3)
       aChild = root.children['a']
       expect(aChild).to eq child
       expect(root.children['a'].parent).to eq root
@@ -113,8 +127,9 @@ describe "NodeFactory class" do
 
   describe "#splitEdgeAtOffset" do
     it "splits a long edge" do
+
       root = alphaNodeFactory.newRoot
-      level1 = alphaNodeFactory.addLeaf(0, root, 'a', 0)
+      level1 = alphaNodeFactory.addLeaf(root, 'a', 0)
       expect(level1.parent).to eq root
       expect(level1.incomingEdgeStartOffset).to eq 0
       expect(level1.incomingEdgeEndOffset).to eq Node::CURRENT_ENDING_OFFSET
@@ -135,8 +150,9 @@ describe "NodeFactory class" do
     end
 
     it "splits edge and returns that node" do
+      nodeFactory = NodeFactory.new dataSource
       root = nodeFactory.newRoot
-      child = nodeFactory.addLeaf(0, root, 'm', 0)
+      child = nodeFactory.addLeaf(root, 'm', 0)
       middleNode = nodeFactory.splitEdgeAt(child, 3)
       expect(middleNode.parent).to eq (root)
       expect(middleNode.incomingEdgeStartOffset).to eq 0
@@ -150,7 +166,7 @@ describe "NodeFactory class" do
 
     it "splits nodes correctly" do
       root = nodeFactory2.newRoot
-      level1 = nodeFactory2.addLeaf(0, root, 'a', 0)
+      level1 = nodeFactory2.addLeaf(root, 'a', 0)
       expect(root.children['a']).to eq level1
       level2 = nodeFactory2.splitEdgeAt(level1, 26)
       expect(root.children['a']).to eq level2
@@ -164,7 +180,7 @@ describe "NodeFactory class" do
 
     it "handles multiple splits" do
       root2 = nodeFactory2.newRoot
-      rLevel1 = nodeFactory2.addLeaf(0, root2, 'a', 0)
+      rLevel1 = nodeFactory2.addLeaf(root2, 'a', 0)
       expect(rLevel1.incomingEdgeStartOffset).to eq 0
       expect(rLevel1.incomingEdgeEndOffset).to eq Node::CURRENT_ENDING_OFFSET
       rLevel2 = nodeFactory2.splitEdgeAt(rLevel1, 26)

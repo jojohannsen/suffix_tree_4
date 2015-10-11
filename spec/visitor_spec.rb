@@ -4,7 +4,7 @@ require_relative '../src/node'
 require_relative '../src/node_factory'
 require_relative '../src/data/string_data_source'
 require_relative '../src/data/file_data_source'
-require_relative '../src/ukkonen_builder'
+require_relative '../src/suffix_tree'
 require_relative '../src/visitor/bfs'
 require_relative '../src/visitor/data_source_visitor'
 require_relative '../src/visitor/k_common_visitor'
@@ -51,36 +51,37 @@ describe 'character depth visitor' do
 
   context "DFS traversal" do
     it "sets character depth using depth first traversal" do
+
       hash = {
           :valueDepth => true
       }
-      stringNodeFactory.setConfiguration hash
-      builder = UkkonenBuilder.new stringNodeFactory
-      builder.addSourceValues
+      st = SuffixTree.new(nil, hash)
+      st.addDataSource(dataSource)
+
       cdv = DFS.new(ValueDepthVisitor.new)
-      cdv.traverse(builder.root)
-      self.verifyValueDepth(builder.root)
+      cdv.traverse(st.root)
+      self.verifyValueDepth(st.root)
     end
   end
 
   context "BFS traversal" do
     it "sets character depth using breadth first traversal" do
-      builder = UkkonenBuilder.new stringNodeFactory.setConfiguration( { :valueDepth => true })
-      builder.addSourceValues
+      st = SuffixTree.new(nil, { :valueDepth => true })
+      st.addDataSource(dataSource)
       cdv = BFS.new(ValueDepthVisitor.new)
-      cdv.traverse(builder.root)
-      self.verifyValueDepth(builder.root)
+      cdv.traverse(st.root)
+      self.verifyValueDepth(st.root)
     end
   end
 
-  def verifyLeafCount(builder)
+  def verifyLeafCount(root)
     lcv = DFS.new(LeafCountVisitor.new)
-    lcv.traverse(builder.root)
-    expect(builder.root.leafCount).to eq (10)  # final 'i' is implicit
-    mChild = builder.root.children['m']
-    iChild = builder.root.children['i']
-    sChild = builder.root.children['s']
-    pChild = builder.root.children['p']
+    lcv.traverse(root)
+    expect(root.leafCount).to eq (10)  # final 'i' is implicit
+    mChild = root.children['m']
+    iChild = root.children['i']
+    sChild = root.children['s']
+    pChild = root.children['p']
     expect(mChild.leafCount).to eq (1)
     expect(iChild.leafCount).to eq (3)
     expect(sChild.leafCount).to eq (4)
@@ -92,10 +93,9 @@ describe 'character depth visitor' do
       hash = {
           :leafCount => true
       }
-      stringNodeFactory.setConfiguration hash
-      builder = UkkonenBuilder.new stringNodeFactory
-      builder.addSourceValues
-      self.verifyLeafCount(builder)
+      st = SuffixTree.new(nil, hash)
+      st.addDataSource(dataSource)
+      self.verifyLeafCount(st.root)
     end
   end
 
@@ -104,19 +104,18 @@ describe 'character depth visitor' do
       hash = {
           :leafCount => true
       }
-      fileNodeFactory.setConfiguration hash
-      builder = UkkonenBuilder.new fileNodeFactory
-      builder.addSourceValues
-      self.verifyLeafCount(builder)
+      st = SuffixTree.new(nil, hash)
+      st.addDataSource(fileDataSource)
+      self.verifyLeafCount(st.root)
     end
   end
 
   def verifyNodeCount(dataSource)
-    builder = UkkonenBuilder.new fileNodeFactory
-    builder.addSourceValues
+    st = SuffixTree.new(nil, nil)
+    st.addDataSource(fileDataSource)
     ncv = NodeCountVisitor.new
     bt = DFS.new(ncv)
-    bt.traverse(builder.root)
+    bt.traverse(st.root)
     expect(ncv.count).to eq (17)
   end
 
@@ -136,9 +135,9 @@ describe 'character depth visitor' do
     it "traverses suffix tree and collects suffix offsets" do
       soCollector = SuffixOffsetVisitor.new
       so = BFS.new(soCollector)
-      builder = UkkonenBuilder.new stringNodeFactory
-      builder.addSourceValues
-      so.traverse(builder.root)
+      st = SuffixTree.new(nil, nil)
+      st.addDataSource(dataSource)
+      so.traverse(st.root)
       expect(soCollector.result.sort).to eq ([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ])
     end
   end
@@ -152,24 +151,19 @@ describe 'character depth visitor' do
 
     it "KCommonVisitor finds longest substring common to k strings" do
       # make the generalized suffix tree
-      nodeFactory = NodeFactory.new s1
-      nodeFactory.setConfiguration( {:valueDepth => true, :dataSourceBit => true})
-      builder = UkkonenBuilder.new nodeFactory
-      builder.addSourceValues
-      builder.newDataSource s2
-      builder.addSourceValues
-      builder.newDataSource s3
-      builder.addSourceValues
-      builder.newDataSource s4
-      builder.addSourceValues
-      builder.newDataSource s5
-      builder.addSourceValues
+      st = SuffixTree.new(nil, {:valueDepth => true, :dataSourceBit => true})
+      st.addDataSource(s1)
+      st.addDataSource(s2)
+      st.addDataSource(s3)
+      st.addDataSource(s4)
+      st.addDataSource(s5)
+
       dataSourceVisitor = DataSourceVisitor.new
       dfs = DFS.new(dataSourceVisitor)
-      dfs.traverse(builder.root)
+      dfs.traverse(st.root)
       kCommonVisitor = KCommonVisitor.new(s1)
       dfs = DFS.new(kCommonVisitor)
-      dfs.traverse(builder.root)
+      dfs.traverse(st.root)
       longestLength,sample = kCommonVisitor.longestStringCommonTo(2)
       expect(longestLength).to eq 4
       expect(sample).to eq "sand"

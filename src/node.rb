@@ -12,11 +12,11 @@ class Node
   attr_accessor :parent, :suffixLink, :children
   attr_accessor :nodeId
 
-  def initialize(nodeId)
+  def initialize(nodeId, suffixOffset = UNSPECIFIED_OFFSET)
     @nodeId = nodeId
     @incomingEdgeStartOffset = UNSPECIFIED_OFFSET
     @incomingEdgeEndOffset = UNSPECIFIED_OFFSET
-    @suffixOffset = UNSPECIFIED_OFFSET
+    @suffixOffset = suffixOffset
 
     @parent = nil
     @suffixLink = nil
