@@ -21,13 +21,21 @@ class NodeFactory
     @nextNodeId = 1
   end
 
-  def extendDataSource(dataSource, startOffset)
+  def nextDataSourceBit
     @dataSourceBit = (@dataSourceBit << 1) if ((@configuration[:dataSourceBit]) && (@dataSource != nil))
+  end
+
+  def extendDataSource(dataSource, startOffset)
+    self.nextDataSourceBit
     if (@dataSource == nil) then
       @dataSource = dataSource
     else
       @dataSource.extendWith(dataSource, startOffset)
     end
+  end
+
+  def nextDataSourceSetSize(modForSwitch)
+    @nextDataSourceSwitch = modForSwitch
   end
 
   def setConfiguration configurationHash
@@ -63,7 +71,6 @@ class NodeFactory
   def addLeaf(node, value, offset)
     result = newChild(node, value)
     result.suffixOffset = @suffixOffset
-
     result.incomingEdgeStartOffset = offset
     result.incomingEdgeEndOffset = Node::CURRENT_ENDING_OFFSET
 
@@ -72,6 +79,9 @@ class NodeFactory
     result.previousValue = (@dataSource.valueAt(@suffixOffset - 1)) if ((@suffixOffset > 0) && @configuration[:previousValue])
     result.dataSourceBit = @dataSourceBit if @configuration[:dataSourceBit]
     @suffixOffset += 1
+    if ((@nextDataSourceSwitch != nil) && ((@suffixOffset % @nextDataSourceSwitch) == 0)) then
+      self.nextDataSourceBit
+    end
     result
   end
 

@@ -1,4 +1,5 @@
 require_relative 'string_data_source'
+require_relative 'file_data_source'
 
 class DataSourceFactory
 

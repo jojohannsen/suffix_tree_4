@@ -143,15 +143,15 @@ describe 'character depth visitor' do
   end
 
   describe "generalized suffix tree" do
-    let(:s1) { StringDataSource.new "sandollar$" }
-    let(:s2) { StringDataSource.new "sandlot$" }
-    let(:s3) { StringDataSource.new "handler$" }
-    let(:s4) { StringDataSource.new "grand$" }
-    let(:s5) { StringDataSource.new "pantry$" }
+    let(:s1) { StringDataSource.new "sandollar" }
+    let(:s2) { StringDataSource.new "sandlot" }
+    let(:s3) { StringDataSource.new "handler" }
+    let(:s4) { StringDataSource.new "grand" }
+    let(:s5) { StringDataSource.new "pantry" }
 
     it "KCommonVisitor finds longest substring common to k strings" do
       # make the generalized suffix tree
-      st = SuffixTree.new(nil, {:valueDepth => true, :dataSourceBit => true})
+      st = SuffixTree.new("$", {:valueDepth => true, :dataSourceBit => true})
       st.addDataSource(s1)
       st.addDataSource(s2)
       st.addDataSource(s3)

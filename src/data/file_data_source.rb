@@ -15,4 +15,15 @@ class FileDataSource < BaseDataSource
     end
     result
   end
+
+  # substring
+  def toString(startOffset, endOffset)
+    @checkFile.seek(startOffset - @startOffset, IO::SEEK_SET)
+    if (endOffset >= startOffset) then
+      return @checkFile.read(endOffset - startOffset + 1)
+    else
+      return @checkFile.read()
+    end
+  end
+
 end
