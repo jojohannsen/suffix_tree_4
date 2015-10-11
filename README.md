@@ -8,7 +8,8 @@ used if configuration allows it.
 
 ## How to build a Suffix Tree of values
 
-1. Create a Data Source to provide the sequence of values
-2. Create a SuffixTree and add the DataSource to it
+1. Create a data source
+2. Configure the NodeFactory
+3. Create the UkkonenBuilder
 
-See suffix_tree_spec.rb for details
+See builder_spec.rb for details
