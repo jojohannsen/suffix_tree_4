@@ -1,0 +1,4 @@
+data d1 string mississippi
+tree t1 d1
+visit depth
+find issi

@@ -1,11 +1,13 @@
 require_relative '../src/data/data_source_factory'
 require_relative '../src/node'
 require_relative '../src/node_factory'
+require_relative '../src/search/searcher'
 require_relative '../src/suffix_tree'
 require_relative '../src/visitor/data_source_visitor'
 require_relative '../src/visitor/dfs'
 require_relative '../src/visitor/k_common_visitor'
 require_relative '../src/visitor/tree_print_visitor'
+require_relative '../src/visitor/value_depth_visitor'
 
 class Cli
   def initialize()
@@ -18,21 +20,96 @@ class Cli
     @currentDataSourceName = "(undefined)"
     @dataSourceFactory = DataSourceFactory.new
     @commandHash = {
+        "child" => "child <key>",
         "data" => "data <name> <type=string|file> <string or fileName>",
         "dump" => "dump <tree name>",
+        "find" => "find <string>",
+        "parent" => "parent",
+        "root" => "root",
         "tree" => "tree <tree name> <data source name>",
         "visit" => "visit <visitor name> [<data source name>]"
     }
     @functionMapper = {
+        'call' => self.method(:call),
+        'child' => self.method(:child),
         'data' => self.method(:dataSource),
         'dump' => self.method(:dump),
-        'kcommon' => self.method(:kcommon),
+        'find' => self.method(:find),
         'help' => self.method(:showCommands),
+        'kcommon' => self.method(:kcommon),
+        'parent' => self.method(:parent),
+        'root' => self.method(:root),
         'tree' => self.method(:tree),
         'visit' => self.method(:visit),
         'quit' => self.method(:quit),
         '?' => self.method(:showCommands)
     }
+  end
+
+  def dumpNode(node)
+    print "Node #{node.nodeId}\n"
+    if (node.children == nil) then
+      print ".. Leaf, #{node.incomingEdgeStartOffset}\n"
+    else
+      print ".. Internal, #{node.incomingEdgeStartOffset} .. #{node.incomingEdgeEndOffset}\n"
+      node.children.keys.each do |key|
+        print ".. #{key}\n"
+      end
+    end
+  end
+
+  def root(data)
+    @currentNode = @currentTree.root
+    self.dumpNode(@currentNode)
+  end
+
+  def child(data)
+    print "child #{data[1]}..\n"
+    key = data[1]
+    if (@currentNode.children != nil) then
+      if (!@currentNode.children.has_key?(key)) then
+        key = data[1].upcase
+      end
+    end
+    if ((@currentNode.children != nil) && (@currentNode.children.has_key?(key))) then
+      print "..found\n"
+      @currentNode = @currentNode.children[data[1]]
+      self.dumpNode(@currentNode)
+      print "..dumped\n"
+    else
+      print "..not found\n"
+    end
+  end
+
+  def parent(data)
+    if ((@currentNode != nil) && (@currentNode.parent != nil)) then
+      @currentNode = @currentNode.parent
+      self.dumpNode(@currentNode)
+    end
+  end
+
+  # call <file>
+  def call(data)
+    if (data.length == 2) then
+      print ">#{data[1]}: start of file\n"
+      file = File.open(data[1], "r")
+      file.each_line do |line|
+        print ">#{line}"
+        self.process_line(line)
+      end
+      print ">#{data[1]}: end of file\n"
+    end
+  end
+
+  def find(data)
+    if (data.length == 2) then
+      searcher = Searcher.new(@currentDataSource, @currentTree.root)
+      result = searcher.find(data[1])
+      print "Result size: #{result.length}\n"
+      result.each do |value|
+        print "#{value}, "
+      end
+    end
   end
 
   # help, ?
@@ -45,7 +122,7 @@ class Cli
       print "\nCurrent Tree: #{@currentTreeName}\n"
     end
     if (@currentDataSource != nil) then
-      print "\nCurrent Data Source: #{@currentDataSourceName}\n"
+      print "Current Data Source: #{@currentDataSourceName}\n"
     end
   end
 
@@ -118,6 +195,9 @@ class Cli
         end
         st.addDataSource(@data[data[2]])
         @currentTree = st
+        @currentTreeName = data[1]
+        @currentDataSource = @data[data[2]]
+        @currentDataSourceName = data[2]
         print "done\n"
       end
     else
@@ -149,6 +229,12 @@ class Cli
         dfs = DFS.new(@kCommonVisitor)
         dfs.traverse(@currentTree.root)
         print "Completed traversal\n"
+      elsif (d1down == "depth") then
+        print "Start ValueDepthVisitor traversal...\n"
+        @valueDepthVisitor = ValueDepthVisitor.new
+        dfs = DFS.new(@valueDepthVisitor)
+        dfs.traverse(@currentTree.root)
+        print "Completed traversal\n"
       end
     end
   end
@@ -160,7 +246,6 @@ class Cli
 
   def process_line(line)
     line.chomp!
-    line.downcase!
     data = line.split
     if (@functionMapper.has_key?(data[0])) then
       @functionMapper[data[0]].call(data)

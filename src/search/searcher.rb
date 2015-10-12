@@ -13,6 +13,8 @@ class Searcher
   def initialize(treeDataSource, treeRoot)
     @dataSource = treeDataSource
     @root = treeRoot
+    print "root node ID is #{@root.nodeId}\n"
+    print "dataSource first value is #{@dataSource.valueAt(0)}\n"
   end
 
   #

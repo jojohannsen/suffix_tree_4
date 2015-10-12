@@ -1,0 +1,8 @@
+data d1 file /Users/jojo/dna/v1m.txt
+tree t1 d1 10000
+visit datasource
+visit kcommon d1
+kcommon 2
+kcommon 3
+kcommon 4
+kcommon 5
