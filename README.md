@@ -41,19 +41,19 @@ just a simple visitor.  The rest, building the suffix tree using values of any d
 
 For example, the DeepestValueDepthVisitor source is just this:
 
-class DeepestValueDepthVisitor < BaseVisitor
-  attr_reader :deepestValueDepth, :deepestValueDepthNode
+    class DeepestValueDepthVisitor < BaseVisitor
+      attr_reader :deepestValueDepth, :deepestValueDepthNode
 
-  def initialize
-    @deepestValueDepthNode = nil
-    @deepestValueDepth = 0
-    super
-  end
+      def initialize
+        @deepestValueDepthNode = nil
+        @deepestValueDepth = 0
+        super
+      end
 
-  def postVisit(node)
-    if (node.valueDepth > @deepestValueDepth) then
-      @deepestValueDepth = node.valueDepth
-      @deepestValueDepthNode = node
+      def postVisit(node)
+        if (node.valueDepth > @deepestValueDepth) then
+          @deepestValueDepth = node.valueDepth
+          @deepestValueDepthNode = node
+        end
+      end
     end
-  end
-end
