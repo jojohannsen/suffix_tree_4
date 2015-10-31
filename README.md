@@ -62,25 +62,25 @@ A more complex visitor, KCommonVisitor, finds the longest string common to N str
 is 64).  The main algorithm method, and the one that provides the results, again have very little code:
 
 
-  def postVisit(node)
-    nCommon = self.countCommon(node.dataSourceBit)
-    currentCommonLength = @commonTo[nCommon].endOffset - @commonTo[nCommon].startOffset + 1
-    if (node.valueDepth > currentCommonLength) then
-      @commonTo[nCommon].startOffset = node.incomingEdgeEndOffset - node.valueDepth + 1
-      @commonTo[nCommon].endOffset = node.incomingEdgeEndOffset
-      if (nCommon > 2) then
-        longestLength = node.valueDepth
-        (1..(nCommon-1)).each do |offset|
-          testLength = @commonTo[offset].endOffset - @commonTo[offset].startOffset + 1
-          if (testLength < longestLength) then
-            @commonTo[offset].startOffset = @commonTo[nCommon].startOffset
-            @commonTo[offset].endOffset = @commonTo[nCommon].endOffset
+    def postVisit(node)
+      nCommon = self.countCommon(node.dataSourceBit)
+      currentCommonLength = @commonTo[nCommon].endOffset - @commonTo[nCommon].startOffset + 1
+      if (node.valueDepth > currentCommonLength) then
+        @commonTo[nCommon].startOffset = node.incomingEdgeEndOffset - node.valueDepth + 1
+        @commonTo[nCommon].endOffset = node.incomingEdgeEndOffset
+        if (nCommon > 2) then
+          longestLength = node.valueDepth
+          (1..(nCommon-1)).each do |offset|
+            testLength = @commonTo[offset].endOffset - @commonTo[offset].startOffset + 1
+            if (testLength < longestLength) then
+              @commonTo[offset].startOffset = @commonTo[nCommon].startOffset
+              @commonTo[offset].endOffset = @commonTo[nCommon].endOffset
+            end
           end
         end
       end
     end
-  end
 
-  def longestStringCommonTo(numberInCommon)
-    return @commonTo[numberInCommon].length, @dataSource.valueSequence(@commonTo[numberInCommon].startOffset, @commonTo[numberInCommon].endOffset)
-  end
+    def longestStringCommonTo(numberInCommon)
+      return @commonTo[numberInCommon].length, @dataSource.valueSequence(@commonTo[numberInCommon].startOffset, @commonTo[numberInCommon].endOffset)
+    end
