@@ -201,7 +201,8 @@ TREESTR
   end
 
   it "builds suffix tree of words" do
-    wordDataSource = WordDataSource.new File.join('spec', 'fixtures', "chapter1.txt")
+    #wordDataSource = WordDataSource.new File.join('spec', 'fixtures', "chapter1.txt")
+    wordDataSource = WordDataSource.new File.join('spec', 'fixtures', "soylent.txt")
     st = SuffixTree.new(nil, { :leafCount => true, :valueDepth => true })
     st.addDataSource(wordDataSource)
 

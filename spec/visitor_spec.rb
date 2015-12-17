@@ -13,6 +13,7 @@ require_relative '../src/visitor/value_depth_visitor'
 require_relative '../src/visitor/dfs'
 require_relative '../src/visitor/node_count_visitor'
 require_relative '../src/visitor/suffix_offset_visitor'
+require_relative '../src/visitor/numbering_visitor'
 
 describe 'character depth visitor' do
 
@@ -176,6 +177,38 @@ describe 'character depth visitor' do
       longestLength,sample = kCommonVisitor.longestStringCommonTo(5)
       expect(longestLength).to eq 2
       expect(sample).to eq "an"
+    end
+  end
+
+  describe "DFS depth number" do
+    it "sets sets depth numbers for nodes" do
+      st = SuffixTree.new
+      st.addDataSource(dataSource)
+      dfs = OrderedDFS.new(NumberingVisitor.new)
+      dfs.traverse(st.root)
+      expect(st.root.dfsNumber).to eq 1
+
+      iChild = st.root.children['i']
+      expect(iChild.dfsNumber).to eq 2
+      expect(iChild.children['p'].dfsNumber).to eq 3
+      expect(iChild.children['s'].dfsNumber).to eq 4
+      expect(iChild.children['s'].children['p'].dfsNumber).to eq 5
+      expect(iChild.children['s'].children['s'].dfsNumber).to eq 6
+
+      mChild = st.root.children['m']
+      expect(mChild.dfsNumber).to eq 7
+      pChild = st.root.children['p']
+      expect(pChild.dfsNumber).to eq 8
+      expect(pChild.children['i'].dfsNumber).to eq 9
+      expect(pChild.children['p'].dfsNumber).to eq 10
+      sChild = st.root.children['s']
+      expect(sChild.dfsNumber).to eq 11
+      expect(sChild.children['i'].dfsNumber).to eq 12
+      expect(sChild.children['i'].children['p'].dfsNumber).to eq 13
+      expect(sChild.children['i'].children['s'].dfsNumber).to eq 14
+      expect(sChild.children['s'].dfsNumber).to eq 15
+      expect(sChild.children['s'].children['p'].dfsNumber).to eq 16
+      expect(sChild.children['s'].children['s'].dfsNumber).to eq 17
     end
   end
 end

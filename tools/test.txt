@@ -1,5 +1,7 @@
 data d1 file /Users/jojo/dna/v1m.txt
+time
 tree t1 d1 10000
+time
 visit datasource
 visit kcommon d1
 kcommon 2

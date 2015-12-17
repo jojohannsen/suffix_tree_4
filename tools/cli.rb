@@ -26,6 +26,7 @@ class Cli
         "find" => "find <string>",
         "parent" => "parent",
         "root" => "root",
+        "time" => "time",
         "tree" => "tree <tree name> <data source name>",
         "visit" => "visit <visitor name> [<data source name>]"
     }
@@ -39,6 +40,7 @@ class Cli
         'kcommon' => self.method(:kcommon),
         'parent' => self.method(:parent),
         'root' => self.method(:root),
+        'time' => self.method(:time),
         'tree' => self.method(:tree),
         'visit' => self.method(:visit),
         'quit' => self.method(:quit),
@@ -86,6 +88,14 @@ class Cli
       @currentNode = @currentNode.parent
       self.dumpNode(@currentNode)
     end
+  end
+
+  def time(data)
+    now = Time.now
+    if (@prevTime != nil) then
+      print "#{(now - @prevTime)*1000.0} ms\n"
+    end
+    @prevTime = now
   end
 
   # call <file>
