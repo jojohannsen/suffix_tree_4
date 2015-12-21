@@ -1,7 +1,7 @@
 require_relative '../node'
 
 module NodeExtensions
-  attr_accessor :dfsNumber
+  attr_accessor :dfsNumber, :numberNodesInSubtree
 end
 
 class Node
@@ -21,6 +21,6 @@ class NumberingVisitor < BaseVisitor
   end
 
   def postVisit(node)
-    # do nothing
+    node.numberNodesInSubtree = @preCounter - node.dfsNumber + 1
   end
 end

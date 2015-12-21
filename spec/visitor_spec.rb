@@ -187,28 +187,45 @@ describe 'character depth visitor' do
       dfs = OrderedDFS.new(NumberingVisitor.new)
       dfs.traverse(st.root)
       expect(st.root.dfsNumber).to eq 1
+      expect(st.root.numberNodesInSubtree).to eq 17
 
       iChild = st.root.children['i']
       expect(iChild.dfsNumber).to eq 2
+      expect(iChild.numberNodesInSubtree).to eq 5
       expect(iChild.children['p'].dfsNumber).to eq 3
+      expect(iChild.children['p'].numberNodesInSubtree).to eq 1
       expect(iChild.children['s'].dfsNumber).to eq 4
+      expect(iChild.children['s'].numberNodesInSubtree).to eq 3
       expect(iChild.children['s'].children['p'].dfsNumber).to eq 5
+      expect(iChild.children['s'].children['p'].numberNodesInSubtree).to eq 1
       expect(iChild.children['s'].children['s'].dfsNumber).to eq 6
+      expect(iChild.children['s'].children['s'].numberNodesInSubtree).to eq 1
 
       mChild = st.root.children['m']
       expect(mChild.dfsNumber).to eq 7
+      expect(mChild.numberNodesInSubtree).to eq 1
+
       pChild = st.root.children['p']
       expect(pChild.dfsNumber).to eq 8
+      expect(pChild.numberNodesInSubtree).to eq 3
       expect(pChild.children['i'].dfsNumber).to eq 9
       expect(pChild.children['p'].dfsNumber).to eq 10
+
       sChild = st.root.children['s']
       expect(sChild.dfsNumber).to eq 11
+      expect(sChild.numberNodesInSubtree).to eq 7
       expect(sChild.children['i'].dfsNumber).to eq 12
+      expect(sChild.children['i'].numberNodesInSubtree).to eq 3
       expect(sChild.children['i'].children['p'].dfsNumber).to eq 13
+      expect(sChild.children['i'].children['p'].numberNodesInSubtree).to eq 1
       expect(sChild.children['i'].children['s'].dfsNumber).to eq 14
+      expect(sChild.children['i'].children['s'].numberNodesInSubtree).to eq 1
       expect(sChild.children['s'].dfsNumber).to eq 15
+      expect(sChild.children['s'].numberNodesInSubtree).to eq 3
       expect(sChild.children['s'].children['p'].dfsNumber).to eq 16
+      expect(sChild.children['s'].children['p'].numberNodesInSubtree).to eq 1
       expect(sChild.children['s'].children['s'].dfsNumber).to eq 17
+      expect(sChild.children['s'].children['s'].numberNodesInSubtree).to eq 1
     end
   end
 end
