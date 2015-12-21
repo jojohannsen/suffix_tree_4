@@ -181,7 +181,7 @@ describe 'character depth visitor' do
   end
 
   describe "DFS depth number" do
-    it "sets sets depth numbers for nodes" do
+    it "sets sets depth numbers and count of nodes in subtree for nodes" do
       st = SuffixTree.new
       st.addDataSource(dataSource)
       dfs = OrderedDFS.new(NumberingVisitor.new)

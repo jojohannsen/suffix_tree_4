@@ -1,5 +1,6 @@
 require_relative '../node'
 
+# monkey patching dfsNumber and numberNodesInSubtree
 module NodeExtensions
   attr_accessor :dfsNumber, :numberNodesInSubtree
 end
@@ -8,8 +9,8 @@ class Node
   prepend NodeExtensions
 end
 
+# use BaseVisitor counters to set the values
 class NumberingVisitor < BaseVisitor
-
   def initialize
     super
   end
