@@ -10,7 +10,7 @@ class Node
 
   attr_accessor :incomingEdgeStartOffset, :incomingEdgeEndOffset, :suffixOffset
   attr_accessor :parent, :suffixLink, :children
-  attr_accessor :nodeId
+  attr_reader :nodeId
 
   def initialize(nodeId, suffixOffset = UNSPECIFIED_OFFSET)
     @nodeId = nodeId

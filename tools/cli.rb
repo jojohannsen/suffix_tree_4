@@ -1,6 +1,7 @@
 require_relative '../src/data/data_source_factory'
 require_relative '../src/node'
 require_relative '../src/node_factory'
+require_relative '../src/persist/suffix_tree_db'
 require_relative '../src/search/searcher'
 require_relative '../src/suffix_tree'
 require_relative '../src/visitor/data_source_visitor'
@@ -8,6 +9,9 @@ require_relative '../src/visitor/dfs'
 require_relative '../src/visitor/k_common_visitor'
 require_relative '../src/visitor/tree_print_visitor'
 require_relative '../src/visitor/value_depth_visitor'
+require_relative '../src/visitor/numbering_visitor'
+
+require "benchmark"
 
 class Cli
   def initialize()
@@ -19,16 +23,21 @@ class Cli
     @currentDataSource = nil
     @currentDataSourceName = "(undefined)"
     @dataSourceFactory = DataSourceFactory.new
+    @persist = false
+    @defaultDB = SuffixTreeDB.new($stdout)
     @commandHash = {
         "child" => "child <key>",
         "data" => "data <name> <type=string|file> <string or fileName>",
         "dump" => "dump <tree name>",
         "find" => "find <string>",
+        "lca" => "lca <node1> <node2>",
+        "load" => "load from <file>",
         "parent" => "parent",
+        "persist" => "persist [to <file>]",
         "root" => "root",
         "time" => "time",
         "tree" => "tree <tree name> <data source name>",
-        "visit" => "visit <visitor name> [<data source name>]"
+        "visit" => "visit <visitor name> [<data source name>]\n  visitor=datasource|kcommon|depth|dfsNumber"
     }
     @functionMapper = {
         'call' => self.method(:call),
@@ -38,7 +47,10 @@ class Cli
         'find' => self.method(:find),
         'help' => self.method(:showCommands),
         'kcommon' => self.method(:kcommon),
+        'lca' => self.method(:lca),
+        'load' => self.method(:load),
         'parent' => self.method(:parent),
+        'persist' => self.method(:persist),
         'root' => self.method(:root),
         'time' => self.method(:time),
         'tree' => self.method(:tree),
@@ -114,11 +126,69 @@ class Cli
   def find(data)
     if (data.length == 2) then
       searcher = Searcher.new(@currentDataSource, @currentTree.root)
+      node = searcher.findNode(data[1])
+      print "Node #{node.dfsNumber}\n" if node != nil
       result = searcher.find(data[1])
       print "Result size: #{result.length}\n"
       result.each do |value|
         print "#{value}, "
       end
+    end
+  end
+
+  # lca <node1> <node2>
+  def lca(data)
+    bitUtil = BitUtil.new
+    leafNodeCollector = LeafNodeCollector.new
+    dfs = DFS.new(leafNodeCollector)
+    dfs.traverse(@currentTree.root)
+    node1 = leafNodeCollector.suffixToLeaf[data[1].to_i]
+    node2 = leafNodeCollector.suffixToLeaf[data[2].to_i]
+    if (node1 == nil) then
+      print "node1 is nil\n"
+    else
+      print "node1 suffixOffset is #{node1.suffixOffset}, #{node1.dfsNumber}\n"
+      print "node1 runTail is #{node1.runTail.dfsNumber}\n"
+    end
+    if (node2 == nil) then
+      print "node2 is nil\n"
+    else
+      print "node2 suffixOffset is #{node2.suffixOffset}, #{node2.dfsNumber}\n"
+      print "node2 runTail is #{node2.runTail.dfsNumber}\n"
+    end
+    binaryTreeLca = node1.runTail.dfsNumber & node2.runTail.dfsNumber
+    print "AND = #{binaryTreeLca}\n"
+    leftMostBit = bitUtil.leftBit(binaryTreeLca)
+    print "Left-most 1 bit: #{leftMostBit}\n"
+    lcaHeight = bitUtil.bitGreaterThanOrEqualTo(leftMostBit, node1.dfsNumber, node2.dfsNumber)
+    print "Left-most bit >= to above, common to runBits of node1 and node2 = #{lcaHeight}\n"
+    node1rightBit = bitUtil.rightBit(node1.dfsNumber)
+    node2rightBit = bitUtil.rightBit(node2.dfsNumber)
+    print "Right-most 1 bit of node1 = #{node1rightBit}\n"
+    print "Right-most 1 bit of node2 = #{node2rightBit}\n"
+    node1ancestorInRun = self.getAncestor(bitUtil, node1, lcaHeight, node1rightBit)
+    node2ancestorInRun = self.getAncestor(bitUtil, node2, lcaHeight, node2rightBit)
+    print "Node1 ancestor in run "
+    if (node1ancestorInRun == nil) then
+      print "nil\n"
+    else
+      print "#{node1ancestorInRun.dfsNumber}\n"
+    end
+    print "Node2 ancestor in run "
+    if (node2ancestorInRun == nil) then
+      print "nil\n"
+    else
+      print "#{node2ancestorInRun.dfsNumber}\n"
+    end
+  end
+
+  def getAncestor(bitUtil, node, lcaHeight, nodeRightBit)
+    if (lcaHeight == nodeRightBit) then
+      return node
+    else
+      leftMostBitToRight = bitUtil.leftMostBitToRightOf(lcaHeight, node.dfsNumber)
+      dfsNumberOf
+      return nil
     end
   end
 
@@ -153,13 +223,21 @@ class Cli
     end
   end
 
+  def newPrintVisitor(treedata)
+    if (@lcaPreprocessed == nil) then
+      TreePrintVisitor.new(treedata, $stdout)
+    else
+      DfsTreePrintVisitor.new(treedata, $stdout)
+    end
+  end
+
   def dump(data)
     if (data.length == 2) then
       if (!@trees.has_key?(data[1])) then
         print "Tree '#{data[1]}' not found\n"
       else
         tree = @trees[data[1]]
-        tpv = TreePrintVisitor.new(@treeData[data[1]], $stdout)
+        tpv = self.newPrintVisitor(@treeData[data[1]])
         tdfs = DFS.new(tpv)
         tdfs.traverse(tree.root)
       end
@@ -190,13 +268,24 @@ class Cli
       self.dumpKeys("Trees", @trees)
     elsif ((data.length == 3) || (data.length == 4)) then
       if (@trees.has_key?(data[1])) then
-        print "Tree '#{data[1]}' already created\n"
+        if (data[2] == "append") then
+          if (@data.has_key?(data[3])) then
+            print "Adding data source '#{data[3]}' to tree '#{data[1]}'"
+            @trees[data[1]].addDataSource(@data[data[3]])
+          else
+            print "Data source '#{data[3]}' not found\n"
+          end
+        else
+          print "Tree '#{data[1]}' already created\n"
+        end
       elsif (!@data.has_key?(data[2])) then
         print "Data '#{data[2]}' is not defined\n"
       else
         print "Creating SuffixTree...#{data.length}\n"
         print "#{data[2]}, #{data[3]}"
-        st = SuffixTree.new(nil, {:valueDepth => true, :dataSourceBit => true})
+        defaultHash = {:valueDepth => true, :dataSourceBit => true}
+        defaultHash[:persist] = true if (@persist)
+        st = SuffixTree.new(nil, defaultHash, @defaultDB)
         print "..adding values\n"
         @trees[data[1]] = st
         @treeData[data[1]] = @data[data[2]]
@@ -212,6 +301,30 @@ class Cli
       end
     else
       self.usage("tree")
+    end
+  end
+
+  def persist(data)
+    @persist = true
+    if ((data.length == 3) && (data[1] == "to")) then
+      @defaultDB = SuffixTreeDB.new(File.open(data[2], "w"))
+    end
+  end
+
+  def load(data)
+    if (((data.length == 5) || (data.length == 7)) && (data[1] == "from") && (data[3] == "data")) then
+      dataSource = @data[data[4]]
+      suffixLimit = 1000000
+      if ((data.length == 7) && (data[5] == "limit")) then
+        suffixLimit = data[6].to_i
+      end
+      treeBuilder = SuffixTreeBuilder.new(SuffixTreeDB.new(File.open(data[2], "r")), dataSource)
+      @builtRoot = treeBuilder.buildNode()
+      timing = Benchmark.measure {
+        while (treeBuilder.buildNode() && (treeBuilder.suffixCount < suffixLimit)) do
+        end
+      }
+      print "#{timing}\n"
     end
   end
 
@@ -244,6 +357,16 @@ class Cli
         @valueDepthVisitor = ValueDepthVisitor.new
         dfs = DFS.new(@valueDepthVisitor)
         dfs.traverse(@currentTree.root)
+        print "Completed traversal\n"
+      elsif (d1down == "lca") then
+        print "Started pre-processing for least common ancestor...\n"
+        dfs = OrderedDFS.new(NumberingVisitor.new)
+        dfs.traverse(@currentTree.root)
+        dfs = OrderedDFS.new(RunDefiningVisitor.new)
+        dfs.traverse(@currentTree.root)
+        dfs = DFS.new(RunBitVisitor.new(@currentTree.root))
+        dfs.traverse(@currentTree.root)
+        @lcaPreprocessed = true
         print "Completed traversal\n"
       end
     end

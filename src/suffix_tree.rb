@@ -3,8 +3,7 @@ require_relative 'node_factory'
 require_relative 'suffix_linker'
 
 #
-#  This is a refactor that includes node_factory and ukkonen_builder and handles
-#  all suffix tree construction within this single class
+# Builds a suffix tree from one or more DataSource instances
 #
 class SuffixTree
   NO_SUFFIX_OFFSET = -1
@@ -20,18 +19,15 @@ class SuffixTree
 
   attr_reader :nodeFactory
 
-  # next node id to give out, updated by private "nextNodeId" method
-  attr_reader :nextNodeId
-
   # the root of the tree, and the terminal value (for making implicit trees explicit)
   attr_reader :root, :terminalValue
 
   # keep track of which nodes need suffix links
   attr_reader :suffixLinker
 
-  def initialize(terminalValue = nil, configuration = nil)
+  def initialize(terminalValue = nil, configuration = nil, persister = nil)
     @nextNodeId = 0
-    @nodeFactory = NodeFactory.new(nil)
+    @nodeFactory = NodeFactory.new(nil, persister)
     @nodeFactory.setConfiguration(configuration) if (configuration != nil)
     @root = @nodeFactory.newRoot()
     @rootDataSource = nil
@@ -112,15 +108,6 @@ class SuffixTree
       @location.jumpToNode(newNode)
       return true   # rule 2
     end
-  end
-
-
-  private
-
-  def nextNodeId
-    result = @nextNodeId
-    @nextNodeId += 1
-    result
   end
 
 end

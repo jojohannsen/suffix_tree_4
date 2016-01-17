@@ -201,8 +201,7 @@ TREESTR
   end
 
   it "builds suffix tree of words" do
-    #wordDataSource = WordDataSource.new File.join('spec', 'fixtures', "chapter1.txt")
-    wordDataSource = WordDataSource.new File.join('spec', 'fixtures', "soylent.txt")
+    wordDataSource = WordDataSource.new File.join('spec', 'fixtures', "chapter1.txt")
     st = SuffixTree.new(nil, { :leafCount => true, :valueDepth => true })
     st.addDataSource(wordDataSource)
 
@@ -213,7 +212,7 @@ TREESTR
     deepVal = DeepestValueDepthVisitor.new
     dfs = DFS.new(deepVal)
     dfs.traverse(st.root)
-    expect(st.nodeFactory.valuePath(deepVal.deepestValueDepthNode)).to eq "my father s thumb"
+    expect(st.nodeFactory.valuePath(deepVal.deepestValueDepthNode)).to eq "in spite of his"
   end
 
   it "converts tree to suffix array" do
@@ -247,7 +246,7 @@ TREESTR
     let(:src1) { StringDataSource.new "abcd" }
     let(:src2) { StringDataSource.new "cxyz" }
 
-    it "sets data source" do
+    it "uses multiple data sources" do
       st = SuffixTree.new(nil, {:valueDepth => true, :dataSourceBit => true})
       st.addDataSource src1
       st.addDataSource src2

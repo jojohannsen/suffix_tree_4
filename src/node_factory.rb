@@ -4,16 +4,19 @@ class NodeFactory
   attr_reader :nextNodeId, :root
   attr_reader :dataSource
   attr_reader :configuration
+  attr_reader :db
 
-  def initialize(dataSource)
+  def initialize(dataSource, persister=nil)
     @dataSource = dataSource
     @suffixOffset = 0
     @configuration = {
         :leafCount => false,
         :valueDepth => false,
         :previousValue => false,
-        :dataSourceBit => false
+        :dataSourceBit => false,
+        :persist => false
     }
+    @db = persister
     self.reset
   end
 
@@ -61,7 +64,8 @@ class NodeFactory
     @root.leafCount = 0 if @configuration[:leafCount]
     @dataSourceBit = 1 if @configuration[:dataSourceBit]
     @root.dataSourceBit = @dataSourceBit if @configuration[:dataSourceBit]
-    return result
+
+    persist(result)
   end
 
 
@@ -69,10 +73,7 @@ class NodeFactory
   #  The algorithm adds leaf nodes in order
   #
   def addLeaf(node, value, offset)
-    result = newChild(node, value)
-    result.suffixOffset = @suffixOffset
-    result.incomingEdgeStartOffset = offset
-    result.incomingEdgeEndOffset = Node::CURRENT_ENDING_OFFSET
+    result = newChild(node, value, @suffixOffset, offset, Node::CURRENT_ENDING_OFFSET)
 
     # optional configuration based properties
     result.leafCount = 1 if (@configuration[:leafCount])
@@ -82,30 +83,30 @@ class NodeFactory
     if ((@nextDataSourceSwitch != nil) && ((@suffixOffset % @nextDataSourceSwitch) == 0)) then
       self.nextDataSourceBit
     end
-    result
+
+    persist(result)
   end
 
   def splitEdgeAt(node, incomingEdgeOffset)
-    result = newChild(node.parent, @dataSource.valueAt(node.incomingEdgeStartOffset))
-    result.incomingEdgeStartOffset = node.incomingEdgeStartOffset
-    result.incomingEdgeEndOffset = incomingEdgeOffset - 1
-    result.suffixOffset = node.suffixOffset
+    result = newChild(node.parent, @dataSource.valueAt(node.incomingEdgeStartOffset), node.suffixOffset, node.incomingEdgeStartOffset, incomingEdgeOffset - 1)
     node.incomingEdgeStartOffset = incomingEdgeOffset
     addChild(result, @dataSource.valueAt(incomingEdgeOffset), node)
 
     # optional configuration based properties
     result.valueDepth = (result.parent.valueDepth + result.incomingEdgeLength) if @configuration[:valueDepth]
     result.dataSourceBit = (node.dataSourceBit | @dataSourceBit) if @configuration[:dataSourceBit]
-    return result
+
+    persist(node)
+    persist(result)
   end
 
   #
-  # return a string of all values on the path to this node
+  # return a sequence of all values on the path to this node
   #
   def valuePath(node, delimiter=' ')
     result = []
     while (node.parent != nil) do
-      addValues(result, node.incomingEdgeStartOffset, node.incomingEdgeEndOffset)
+      reverseAddValues(result, node.incomingEdgeStartOffset, node.incomingEdgeEndOffset)
       node = node.parent
     end
     result.reverse!
@@ -117,7 +118,8 @@ class NodeFactory
   #
   private
 
-  def addValues(result, startOffset, endOffset)
+  # return edge value sequence in reverse (used when getting path to root from a node)
+  def reverseAddValues(result, startOffset, endOffset)
     if (endOffset == Node::CURRENT_ENDING_OFFSET) then
       result << @dataSource.valueAt(startOffset)
     else
@@ -129,8 +131,11 @@ class NodeFactory
     end
   end
 
-  def newChild(node, key)
+  def newChild(node, key, suffixOffset, incomingEdgeStartOffset, incomingEdgeEndOffset)
     child = newNode
+    child.suffixOffset = suffixOffset
+    child.incomingEdgeStartOffset = incomingEdgeStartOffset
+    child.incomingEdgeEndOffset = incomingEdgeEndOffset
     addChild(node, key, child)
     child.valueDepth = 0 if @configuration[:valueDepth]
     return child
@@ -152,6 +157,14 @@ class NodeFactory
     end
     parentNode.children[value] = childNode
     childNode.parent = parentNode
+    persist(parentNode)
+    persist(childNode)
   end
 
+  def persist(node)
+    if (@configuration[:persist] && @db != nil) then
+      @db.persist(node)
+    end
+    node
+  end
 end

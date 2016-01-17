@@ -14,6 +14,7 @@ require_relative '../src/visitor/dfs'
 require_relative '../src/visitor/node_count_visitor'
 require_relative '../src/visitor/suffix_offset_visitor'
 require_relative '../src/visitor/numbering_visitor'
+require_relative '../src/visitor/tree_print_visitor'
 
 describe 'character depth visitor' do
 
@@ -226,6 +227,80 @@ describe 'character depth visitor' do
       expect(sChild.children['s'].children['p'].numberNodesInSubtree).to eq 1
       expect(sChild.children['s'].children['s'].dfsNumber).to eq 17
       expect(sChild.children['s'].children['s'].numberNodesInSubtree).to eq 1
+    end
+  end
+
+  describe "DFS node path numbers number" do
+    it "sets sets node depth numbers then path numbers" do
+      st = SuffixTree.new
+      st.addDataSource(dataSource)
+      dfs = OrderedDFS.new(NumberingVisitor.new)
+      dfs.traverse(st.root)
+      dfs = OrderedDFS.new(RunDefiningVisitor.new)
+      dfs.traverse(st.root)
+      dfs = DFS.new(RunBitVisitor.new(st.root))
+      dfs.traverse(st.root)
+
+      expect(st.root.runTail.binaryTreeHeight).to eq 5
+      expect(st.root.runTail.dfsNumber).to eq 16
+      expect(st.root.runBits).to eq 16
+
+      iChild = st.root.children['i']
+      expect(iChild.runTail.binaryTreeHeight).to eq 3
+      expect(iChild.runTail.dfsNumber).to eq 4
+      expect(iChild.runBits).to eq 20  # 16 (binaryTreeHeight 5) + 4 (binaryTreeHeight 3)
+
+      expect(iChild.children['p'].runTail.binaryTreeHeight).to eq 1
+      expect(iChild.children['p'].runTail.dfsNumber).to eq 3
+      expect(iChild.children['p'].runBits).to eq 21
+      expect(iChild.children['s'].runTail.binaryTreeHeight).to eq 3
+      expect(iChild.children['s'].runTail.dfsNumber).to eq 4
+      expect(iChild.children['s'].runBits).to eq 20
+      expect(iChild.children['s'].children['p'].runTail.binaryTreeHeight).to eq 1
+      expect(iChild.children['s'].children['p'].runTail.dfsNumber).to eq 5
+      expect(iChild.children['s'].children['p'].runBits).to eq 21
+      expect(iChild.children['s'].children['s'].runTail.binaryTreeHeight).to eq 2
+      expect(iChild.children['s'].children['s'].runTail.dfsNumber).to eq 6
+      expect(iChild.children['s'].children['s'].runBits).to eq 22
+
+      mChild = st.root.children['m']
+      expect(mChild.runTail.binaryTreeHeight).to eq 1
+      expect(mChild.runTail.dfsNumber).to eq 7
+      expect(mChild.runBits).to eq 17
+
+      pChild = st.root.children['p']
+      expect(pChild.runTail.binaryTreeHeight).to eq 4
+      expect(pChild.runTail.dfsNumber).to eq 8
+      expect(pChild.runBits).to eq 24
+      expect(pChild.children['i'].runTail.binaryTreeHeight).to eq 1
+      expect(pChild.children['i'].runTail.dfsNumber).to eq 9
+      expect(pChild.children['i'].runBits).to eq 25
+      expect(pChild.children['p'].runTail.binaryTreeHeight).to eq 2
+      expect(pChild.children['p'].runTail.dfsNumber).to eq 10
+      expect(pChild.children['p'].runBits).to eq 26
+
+      sChild = st.root.children['s']
+      expect(sChild.runTail.binaryTreeHeight).to eq 5
+      expect(sChild.runTail.dfsNumber).to eq 16
+      expect(sChild.runBits).to eq 16
+      expect(sChild.children['i'].runTail.binaryTreeHeight).to eq 3
+      expect(sChild.children['i'].runTail.dfsNumber).to eq 12
+      expect(sChild.children['i'].runBits).to eq 20
+      expect(sChild.children['i'].children['p'].runTail.binaryTreeHeight).to eq 1
+      expect(sChild.children['i'].children['p'].runTail.dfsNumber).to eq 13
+      expect(sChild.children['i'].children['p'].runBits).to eq 21
+      expect(sChild.children['i'].children['s'].runTail.binaryTreeHeight).to eq 2
+      expect(sChild.children['i'].children['s'].runTail.dfsNumber).to eq 14
+      expect(sChild.children['i'].children['s'].runBits).to eq 22
+      expect(sChild.children['s'].runTail.binaryTreeHeight).to eq 5
+      expect(sChild.children['s'].runTail.dfsNumber).to eq 16
+      expect(sChild.children['s'].runBits).to eq 16
+      expect(sChild.children['s'].children['p'].runTail.binaryTreeHeight).to eq 5
+      expect(sChild.children['s'].children['p'].runTail.dfsNumber).to eq 16
+      expect(sChild.children['s'].children['p'].runBits).to eq 16
+      expect(sChild.children['s'].children['s'].runTail.binaryTreeHeight).to eq 1
+      expect(sChild.children['s'].children['s'].runTail.dfsNumber).to eq 17
+      expect(sChild.children['s'].children['s'].runBits).to eq 17
     end
   end
 end

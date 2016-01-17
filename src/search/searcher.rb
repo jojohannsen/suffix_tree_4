@@ -13,8 +13,6 @@ class Searcher
   def initialize(treeDataSource, treeRoot)
     @dataSource = treeDataSource
     @root = treeRoot
-    print "root node ID is #{@root.nodeId}\n"
-    print "dataSource first value is #{@dataSource.valueAt(0)}\n"
   end
 
   #
@@ -26,12 +24,24 @@ class Searcher
     location
   end
 
-  def find(s)
+  def findNode(searchString)
     location = Location.new(@root)
-    if (location.matchDataSource(@dataSource, StringDataSource.new(s)).depth == s.length) then
+    if (location.matchDataSource(@dataSource, StringDataSource.new(searchString)).depth == searchString.length) then
+      return location.node
+    else
+      return nil
+    end
+  end
+
+  #
+  #  returns the list of suffix offset values where the searchString has been found
+  #
+  def find(searchString)
+    node = self.findNode(searchString)
+    if (node != nil) then
       soCollector = SuffixOffsetVisitor.new
       so = BFS.new(soCollector)
-      so.traverse(location.node)
+      so.traverse(node)
       return soCollector.result.sort
     else
       return []
