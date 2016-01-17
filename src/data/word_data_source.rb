@@ -37,16 +37,37 @@ end
 
 
 class DelimitedWordDataSource < WordDataSource
+  attr_accessor :buckets
   def initialize(filePath, lineStateMachine)
     @lineStateMachine = lineStateMachine
+    @buckets = {}
     super(filePath,"/[^[:print:]]/")
+  end
+
+  def bucket
+    @lineStateMachine.bucket
+  end
+
+  def processData(data,bucket)
+    data.each do |word|
+      word = word.chomp(",")
+      if (word.length > 0) then
+        @words << word
+        if (!@buckets[bucket].has_key?(word)) then
+          @buckets[bucket][word] = 0
+        end
+        @buckets[bucket][word] += 1
+      end
+    end
   end
 
   def process(line)
     line = self.preprocessLine(line)
     data = @lineStateMachine.process(line)
     if (data.length > 0) then
-      self.processData(data)
+      bucket = @lineStateMachine.bucket
+      @buckets[bucket] = {} if (!@buckets.has_key?(bucket))
+      self.processData(data,bucket)
     end
   end
 end

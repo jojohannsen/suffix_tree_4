@@ -6,7 +6,10 @@ require 'state_machine'
 #  into [ "END_OF_PAGE", "<page number>", "<title as a single word>"]
 #
 class LineStateMachine
+  attr_accessor :bucket
+
   def initialize
+    @bucket = "Page 0"
     @dataQueue = []
     super
   end
@@ -17,7 +20,7 @@ class LineStateMachine
     result << @dataQueue
     result << data
     @dataQueue = []
-    result.flatten
+    return result.flatten
   end
 
   def process(line)
@@ -49,6 +52,7 @@ class LineStateMachine
     if (data.length > 0) then
       if (self.foundTitle) then
         @dataQueue = []
+        @bucket = "Page #{@potentialPageNumber}"
         return [ "END_OF_PAGE", "#{@potentialPageNumber}", "#{line}"]
       end
     end
