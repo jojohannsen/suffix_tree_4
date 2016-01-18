@@ -187,7 +187,6 @@ class Cli
       return node
     else
       leftMostBitToRight = bitUtil.leftMostBitToRightOf(lcaHeight, node.dfsNumber)
-      dfsNumberOf
       return nil
     end
   end

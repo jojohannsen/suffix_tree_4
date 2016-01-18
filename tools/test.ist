@@ -1,0 +1,11 @@
+debug
+use word data source
+wds read /Users/jojo/pdf2txt/pdfminer-master/text/hadoopBook.txt
+#wds read ../spec/fixtures/smallFile.txt
+wds save
+use suffix tree
+st create
+st data wds
+#st print
+st find governed
+quit

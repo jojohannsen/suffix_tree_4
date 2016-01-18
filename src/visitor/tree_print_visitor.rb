@@ -29,3 +29,9 @@ class DfsTreePrintVisitor < TreePrintVisitor
     "#{node.dfsNumber} #{node.suffixOffset}, #{node.runTail.binaryTreeHeight}/#{node.runTail.dfsNumber} #{super}"
   end
 end
+
+class BasicDfsTreePrintVisitor < TreePrintVisitor
+  def nodeToStr(node)
+    "#{node.dfsNumber} #{node.suffixOffset}, #{super}"
+  end
+end

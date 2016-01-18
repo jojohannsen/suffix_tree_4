@@ -1,3 +1,6 @@
+#
+#  Only makes sense from OrderedDFS
+#
 class SuffixOffsetVisitor
 
   attr_reader :result
