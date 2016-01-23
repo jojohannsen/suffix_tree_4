@@ -1,8 +1,11 @@
 class TreePrintVisitor
-  def initialize(dataSource, io)
+  ALL_LEVELS = -1
+
+  def initialize(dataSource, io, level=ALL_LEVELS)
     @indentation = 0
     @dataSource = dataSource
     @io = io
+    @level = level
   end
 
   def nodeToStr(node)
@@ -15,8 +18,12 @@ class TreePrintVisitor
 
   def preVisit(node)
     @io.print "#{" "*@indentation}#{self.nodeToStr(node)}\n"
-    @indentation += 1
-    return true
+    if (@level == ALL_LEVELS) || (@indentation < @level) then
+      @indentation += 1
+      return true
+    else
+      return false
+    end
   end
 
   def postVisit(node)

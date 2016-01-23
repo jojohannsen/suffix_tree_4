@@ -6,12 +6,11 @@ class BaseDataSource
     @startOffset = startOffset
   end
 
-  def valueSequence(startOffset, endOffset)
-    result = ""
-    (startOffset..endOffset).each do |offset|
-      result += self.valueAt(offset)
+  def each_with_index(offset = 0)
+    while ((value = self.valueAt(offset)) != nil) do
+      yield value, offset
+      offset += 1
     end
-    result
   end
 
   def extendWith(dataSource, startOffset)
@@ -23,6 +22,10 @@ class BaseDataSource
     end
   end
 
+  def has_terminator?
+    false
+  end
+
   def nextDataSourceValueAt(offset)
     if (@nextDataSource != nil) then
       return @nextDataSource.valueAt(offset)
@@ -31,10 +34,11 @@ class BaseDataSource
     end
   end
 
-  def each_with_index(offset = 0)
-    while ((value = self.valueAt(offset)) != nil) do
-      yield value, offset
-      offset += 1
+  def valueSequence(startOffset, endOffset)
+    result = ""
+    (startOffset..endOffset).each do |offset|
+      result += self.valueAt(offset)
     end
+    result
   end
 end

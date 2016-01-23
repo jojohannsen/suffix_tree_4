@@ -75,6 +75,15 @@ class SuffixTree
   end
 
   #
+  #  Finish building the tree by adding a value that is not part of the data source
+  #
+  def finish()
+    if (@rootDataSource.has_terminator?) then
+      self.addValue(@rootDataSource.terminator, @startOffset)
+    end
+  end
+
+  #
   #  Extend a single suffix at the current location, returns true if there is another
   #  suffix to extend.
   #

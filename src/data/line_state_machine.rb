@@ -6,10 +6,11 @@ require 'state_machine'
 #  into [ "END_OF_PAGE", "<page number>", "<title as a single word>"]
 #
 class LineStateMachine
-  attr_accessor :bucket
+  attr_accessor :bucket, :pages
 
   def initialize
     @bucket = "Page 0"
+    @pages = {}
     @dataQueue = []
     super
   end
@@ -23,7 +24,7 @@ class LineStateMachine
     return result.flatten
   end
 
-  def process(line)
+  def process(line, wordIndex)
     data = line.split
 
     # we are looking for a blank, a pipe, or a page number
@@ -53,7 +54,8 @@ class LineStateMachine
       if (self.foundTitle) then
         @dataQueue = []
         @bucket = "Page #{@potentialPageNumber}"
-        return [ "END_OF_PAGE", "#{@potentialPageNumber}", "#{line}"]
+        @pages[@bucket] = wordIndex
+        return []
       end
     end
 

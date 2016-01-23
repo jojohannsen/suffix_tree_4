@@ -20,7 +20,9 @@ class DataSourceCommands
   def runCommand(data)
     # "read" handled differently because it creates the data source
     if (data[1] == "read") then
-      @variables[data[0]] = DelimitedWordDataSource.new(data[2], LineStateMachine.new)
+      limit = 0
+      limit = data[3].to_i if (data.length == 4)
+      @variables[data[0]] = DelimitedWordDataSource.new(data[2], LineStateMachine.new, limit)
       self.setFunctionMapper(@variables[data[0]])
     elsif (@variables.has_key?(data[0]) && @functionMapper.has_key?(data[1]))
       self.setFunctionMapper(@variables[data[0]])
@@ -38,6 +40,8 @@ class DataSourceCommands
     return @variables[name]
   end
 
+
+
   def setFunctionMapper(instance)
     @functionMapper['save'] = instance.method(:save)
     @numberParameters['save'] = 0
@@ -51,7 +55,9 @@ class SuffixTreeCommands
     @instanceFunctionMapper = {
         'data' => self.method(:data),
         'find' => self.method(:find),
+        'finish' => self.method(:finish),
         'print' => self.method(:printTree),
+        'verify' => self.method(:verify),
     }
     @functionMapper = {}
     @numberParameters = {}
@@ -59,7 +65,6 @@ class SuffixTreeCommands
   end
 
   def runCommand(data)
-    print "SuffixTree runCommand\n"
     # "read" handled differently because it creates the data source
     if (data[1] == "create") then
       @variables[data[0]] = SuffixTree.new
@@ -77,34 +82,67 @@ class SuffixTreeCommands
   end
 
   def data(data)
-    print "Data #{data}\n"
     @functionMapper[data[1]].call(@dataSourceCommands.getVariable(data[2]))
   end
 
   def find(data)
-    print "Find #{data}\n"
     st = @variables[data[0]]
     searcher = Searcher.new(st.rootDataSource, st.root)
     location = searcher.matchDataSource(SingleWordDataSource.new(data[2]))
-    suffixVisitor = SuffixOffsetVisitor.new
-    dfs = DFS.new(suffixVisitor)
-    dfs.traverse(location.node)
-    @searchResults = suffixVisitor.result
-    print "Found #{@searchResults.length} results\n"
-    @searchResults.each do |offset|
-      print "  #{offset}, #{st.rootDataSource.valueAt(offset)}\n"
+    if (location.node == st.root) then
+      print "Did not find it\n"
+    else
+      suffixVisitor = SuffixOffsetVisitor.new
+      dfs = DFS.new(suffixVisitor)
+      dfs.traverse(location.node)
+      @searchResults = suffixVisitor.result
+      print "Found #{@searchResults.length} results\n"
+      @searchResults.each do |offset|
+        print "  #{offset}, #{st.rootDataSource.valueAt(offset)}, #{st.rootDataSource.metaDataFor(offset)}\n"
+      end
     end
   end
 
-  def printTree(data)
-    print "Print #{data}\n"
+  def finish(data)
     st = @variables[data[0]]
+    st.finish
+  end
+
+  def printTree(data)
+    st = @variables[data[0]]
+    self.printTreeAtNode(st.root)
     nv = NumberingVisitor.new
     dfs = DFS.new(nv)
     dfs.traverse(st.root)
-    tpv = BasicDfsTreePrintVisitor.new(st.rootDataSource, STDOUT)
+    self.printTreeFromNode(st.rootDataSource, st.root, (data.length == 3) ? data[2].to_i : TreePrintVisitor::ALL_LEVELS)
+  end
+
+  def printTreeFromNode(dataSource, node, levels)
+    tpv = BasicDfsTreePrintVisitor.new(dataSource, STDOUT, levels)
     dfs = DFS.new(tpv)
-    dfs.traverse(st.root)
+    dfs.traverse(node)
+  end
+
+  def verify(data)
+    st = @variables[data[0]]
+    searcher = Searcher.new(st.rootDataSource, st.root)
+    testDataSource = ArrayWordDataSource.new(st.rootDataSource.wordAsEncountered,
+        st.rootDataSource.wordValueSequence, data[2].to_i)
+    allVerified = true
+    testDataSource.each_word do |word|
+      location = searcher.matchDataSource(SingleWordDataSource.new(word))
+      suffixVisitor = SuffixOffsetVisitor.new
+      dfs = DFS.new(suffixVisitor)
+      dfs.traverse(location.node)
+      @searchResults = suffixVisitor.result
+      if (!st.rootDataSource.verify(word,@searchResults.length)) then
+        print "Failed to verify #{word}, expected #{st.rootDataSource.wordCounts[word]}, found #{@searchResults.length}\n"
+        allVerified = false
+        self.printTreeFromNode(st.rootDataSource, location.node, 1)
+      end
+    end
+    print "Successfully verified suffix tree '#{data[0]}'\n" if (allVerified)
+    print "Failed to verify suffix tree '#{data[0]}'\n" if (!allVerified)
   end
 
   def setFunctionMapper(instance)
@@ -199,6 +237,11 @@ if (ARGV.length == 1) then
   file = File.open(ARGV[0], "r")
 end
 
-while (line = file.readline) do
-  ist.process(line)
+begin
+  while (line = file.readline) do
+    ist.process(line)
+  end
+rescue EOFError
+  print "End of file\n"
 end
+

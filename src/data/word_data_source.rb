@@ -10,7 +10,9 @@ class WordDataSource < BaseDataSource
     File.open(filePath, "r") do |file|
       file.each_line do |line|
         line.chomp!
-        self.process(line)
+        if (self.process(line)) then
+          break
+        end
       end
     end
     @numberWordsInFile = @words.length
@@ -18,7 +20,7 @@ class WordDataSource < BaseDataSource
 
   def process(line)
     line = self.preprocessLine(line)
-    self.processData(line.split)
+    return self.processData(line.split)
   end
 
   def processData(data)
@@ -26,6 +28,7 @@ class WordDataSource < BaseDataSource
       word = word.chomp(",")
       @words << word
     end
+    return false
   end
 
   def preprocessLine(line)
@@ -56,15 +59,63 @@ class SingleWordDataSource < BaseDataSource
   end
 
   def valueAt(offset)
+    return nil if (offset > 0)
     return @word
   end
 end
 
-class DelimitedWordDataSource < WordDataSource
-  attr_reader :buckets, :wordCounts
+class ArrayWordDataSource
+  attr_reader :wordCounts
 
-  def initialize(filePath, lineStateMachine)
+  def initialize(wordList, offsetList, size)
+    @wordList = wordList
+    @offsetList = offsetList
+    @size = size
+    @wordCounts = createWordCounts
+  end
+
+  def valueAt(offset)
+    if (offset < @size) then
+      return @wordList[@offsetList[offset]]
+    else
+      return nil
+    end
+  end
+
+  def verify(word, count)
+    if (@wordCounts == nil) then
+      createWordCounts
+    end
+    @wordCounts[word] == count
+  end
+
+  def each_word(offset = 0)
+    while ((value = self.valueAt(offset)) != nil) do
+      yield value
+      offset += 1
+    end
+  end
+
+  private
+  def createWordCounts()
+    wordCounts = {}
+    @wordList.each do |word|
+      if (!wordCounts.has_key?(word)) then
+        wordCounts[word] = 0
+      end
+      wordCounts[word] += 1
+    end
+    wordCounts
+  end
+end
+
+class DelimitedWordDataSource < WordDataSource
+  attr_reader :buckets, :wordCounts, :wordAsEncountered, :wordValueSequence
+
+  def initialize(filePath, lineStateMachine, limit)
     @lineStateMachine = lineStateMachine
+    @limit = limit
+    @count = 0
     @buckets = {}
     @wordCounts = {}
     @wordValueSequence = []  # list of words in file in terms of index into @wordAsEncountered
@@ -90,7 +141,26 @@ class DelimitedWordDataSource < WordDataSource
     File.open("#{@filePath}.summary", "w") do |file|
       file << "#{@numberWordsInFile} words in file\n"
       file << "#{@nextWordEncounteredIndex} distinct words\n"
+      file << "Metadata\n"
+
+      # uh-oh, this seems to reverse the hash in place!
+      @lineStateMachine.pages.sort_by(&:reverse).each do |page, wordOffset|
+        file << "#{wordOffset} #{page}\n"
+      end
     end
+  end
+
+  # TODO: fix this, linear metadata search, O(N) should be O(lg N)
+  def metaDataFor(offset)
+    previousMetadata = "unknown"
+    @lineStateMachine.pages.sort_by(&:reverse).each do |metadata, wordOffset|
+      if (wordOffset < offset) then
+        previousMetadata = metadata
+      else
+        return previousMetadata
+      end
+    end
+    return previousMetadata
   end
 
   def wordCount(word)
@@ -117,17 +187,35 @@ class DelimitedWordDataSource < WordDataSource
         end
         @buckets[bucket][word] += 1
         @wordValueSequence << @wordAsEncounteredIndex[word]
+        @count += 1
+        if ((@limit > 0) && (@count >= @limit)) then
+          return true
+        end
       end
     end
+    return false
   end
 
   def process(line)
     line = self.preprocessLine(line)
-    data = @lineStateMachine.process(line)
+    data = @lineStateMachine.process(line, @wordValueSequence.length)
     if (data.length > 0) then
       bucket = @lineStateMachine.bucket
       @buckets[bucket] = {} if (!@buckets.has_key?(bucket))
-      self.processData(data,bucket)
+      return self.processData(data,bucket)
     end
+    return false
+  end
+
+  def verify(word, count)
+    @wordCounts[word] == count
+  end
+
+  def has_terminator?
+    true
+  end
+
+  def terminator
+    "END_OF_DOCUMENT"
   end
 end

@@ -20,9 +20,7 @@ class Searcher
   #
   def matchDataSource(dataSource)
     location = Location.new(@root)
-    print "matchDataSource\n"
     location.matchDataSource(@dataSource, dataSource)
-    print "Location result is #{location.node.incomingEdgeStartOffset} #{location.node.incomingEdgeEndOffset}\n"
     location
   end
 
