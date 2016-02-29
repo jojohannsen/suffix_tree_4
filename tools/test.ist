@@ -11,7 +11,7 @@ use word data source
 wds read /Users/jojo/pdf2txt/pdfminer-master/text/hadoopBook.txt
 #wds save
 use suffix tree
-st create
+st create ARGV-0
 st data wds
 st finish
 

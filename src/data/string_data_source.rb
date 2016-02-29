@@ -7,6 +7,10 @@ class StringDataSource < BaseDataSource
     super()
   end
 
+  def numberValues
+    return @s.length
+  end
+
   def valueAt(offset)
     value = @s[ offset - @startOffset ]
     if (value == nil) then

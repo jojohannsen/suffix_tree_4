@@ -13,8 +13,7 @@ class NodeFactory
         :leafCount => false,
         :valueDepth => false,
         :previousValue => false,
-        :dataSourceBit => false,
-        :persist => false
+        :dataSourceBit => false
     }
     @db = persister
     self.reset
@@ -162,7 +161,7 @@ class NodeFactory
   end
 
   def persist(node)
-    if (@configuration[:persist] && @db != nil) then
+    if (@db != nil) then
       @db.persist(node)
     end
     node

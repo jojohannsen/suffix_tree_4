@@ -1,5 +1,6 @@
 require_relative '../src/data/line_state_machine'
 require_relative '../src/data/word_data_source'
+require_relative '../src/persist/suffix_tree_db'
 require_relative '../src/search/searcher'
 require_relative '../src/suffix_tree'
 require_relative '../src/visitor/dfs'
@@ -24,6 +25,7 @@ class DataSourceCommands
       limit = data[3].to_i if (data.length == 4)
       @variables[data[0]] = DelimitedWordDataSource.new(data[2], LineStateMachine.new, limit)
       self.setFunctionMapper(@variables[data[0]])
+
     elsif (@variables.has_key?(data[0]) && @functionMapper.has_key?(data[1]))
       self.setFunctionMapper(@variables[data[0]])
 
@@ -40,8 +42,6 @@ class DataSourceCommands
     return @variables[name]
   end
 
-
-
   def setFunctionMapper(instance)
     @functionMapper['save'] = instance.method(:save)
     @numberParameters['save'] = 0
@@ -56,6 +56,7 @@ class SuffixTreeCommands
         'data' => self.method(:data),
         'find' => self.method(:find),
         'finish' => self.method(:finish),
+        'persist' => self.method(:persist),
         'print' => self.method(:printTree),
         'verify' => self.method(:verify),
     }
@@ -67,7 +68,11 @@ class SuffixTreeCommands
   def runCommand(data)
     # "read" handled differently because it creates the data source
     if (data[1] == "create") then
-      @variables[data[0]] = SuffixTree.new
+      terminalValue = nil
+      configuration = nil
+      persister = nil
+      persister = SuffixTreeDB.new(data[2][1..-1]) if (data.length == 3)
+      @variables[data[0]] = SuffixTree.new(terminalValue, configuration, persister)
       self.setFunctionMapper(@variables[data[0]])
     elsif (@variables.has_key?(data[0]) && @instanceFunctionMapper.has_key?(data[1]))
       self.setFunctionMapper(@variables[data[0]])
@@ -106,6 +111,29 @@ class SuffixTreeCommands
   def finish(data)
     st = @variables[data[0]]
     st.finish
+  end
+
+  def persist(data)
+    st = @variables[data[0]]
+
+    searcher = Searcher.new(st.rootDataSource, st.root)
+    testDataSource = ArrayWordDataSource.new(st.rootDataSource.wordAsEncountered,
+                                             st.rootDataSource.wordValueSequence, data[2].to_i)
+    allVerified = true
+    testDataSource.each_word do |word|
+      location = searcher.matchDataSource(SingleWordDataSource.new(word))
+      suffixVisitor = SuffixOffsetVisitor.new
+      dfs = DFS.new(suffixVisitor)
+      dfs.traverse(location.node)
+      @searchResults = suffixVisitor.result
+      if (!st.rootDataSource.verify(word,@searchResults.length)) then
+        print "Failed to verify #{word}, expected #{st.rootDataSource.wordCounts[word]}, found #{@searchResults.length}\n"
+        allVerified = false
+        self.printTreeFromNode(st.rootDataSource, location.node, 1)
+      end
+    end
+    print "Successfully verified suffix tree '#{data[0]}'\n" if (allVerified)
+    print "Failed to verify suffix tree '#{data[0]}'\n" if (!allVerified)
   end
 
   def printTree(data)
@@ -152,7 +180,7 @@ class SuffixTreeCommands
 end
 
 class InteractiveSuffixTree
-  def initialize
+  def initialize(args)
     @verbose = false
     @context = nil
     @functionMapper = {
@@ -163,11 +191,30 @@ class InteractiveSuffixTree
     }
     @dataSourceCommands = DataSourceCommands.new
     @suffixTreeCommands = SuffixTreeCommands.new(@dataSourceCommands)
+    @replacements = {}
+    if (args.length > 1) then
+      (1..(args.length-1)).each do |offset|
+        print "offset is #{offset}, arg is #{args[offset]}\n"
+        @replacements["ARGV-#{offset-1}"] = args[offset]
+      end
+    end
   end
 
   def process(line)
     line.chomp!
-    print "#{line}\n" if (@verbose)
+
+    print "BEFORE replacement: #{line}\n" if (@verbose)
+
+    if (@replacements.length) then
+      @replacements.keys.each do |replacementKey|
+        print "line gsub '#{replacementKey}' with #{@replacements[replacementKey]}\n"
+        print "original line: #{line}\n"
+        line = line.gsub(replacementKey, @replacements[replacementKey])
+        print "replaced line: #{line}\n"
+      end
+    end
+    print "AFTER replacement: #{line}\n" if (@verbose)
+
     data = line.split
 
     # control commands
@@ -199,7 +246,7 @@ class InteractiveSuffixTree
     if ((data.length > 1) && File.exist?(data[1])) then
       File.open(data[1], "r") do |file|
         file.each_line do |line|
-          self.process(line)
+          self.process(line, nil)
         end
       end
     else
@@ -231,9 +278,9 @@ class InteractiveSuffixTree
   end
 end
 
-ist = InteractiveSuffixTree.new()
+ist = InteractiveSuffixTree.new(ARGV)
 file = STDIN
-if (ARGV.length == 1) then
+if (ARGV.length > 1) then
   file = File.open(ARGV[0], "r")
 end
 

@@ -1,5 +1,6 @@
 require_relative '../visitor/bfs'
 require_relative '../visitor/suffix_offset_visitor'
+require_relative '../data/string_data_source'
 
 #
 #  Searcher finds matches in a tree
@@ -24,9 +25,9 @@ class Searcher
     location
   end
 
-  def findNode(searchString)
+  def findNode(dataSource)
     location = Location.new(@root)
-    if (location.matchDataSource(@dataSource, StringDataSource.new(searchString)).depth == searchString.length) then
+    if (location.matchDataSource(@dataSource, dataSource).depth == dataSource.numberValues) then
       return location.node
     else
       return nil
@@ -36,8 +37,18 @@ class Searcher
   #
   #  returns the list of suffix offset values where the searchString has been found
   #
-  def find(searchString)
-    node = self.findNode(searchString)
+  def findString(searchString)
+    node = self.findNode(StringDataSource.new(searchString))
+    return self.findResults(node)
+  end
+
+
+  def findWord(searchString)
+    node = self.findNode(SingleWordDataSource.new(searchString))
+    return self.findResults(node)
+  end
+
+  def findResults(node)
     if (node != nil) then
       soCollector = SuffixOffsetVisitor.new
       so = BFS.new(soCollector)

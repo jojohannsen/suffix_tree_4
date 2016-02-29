@@ -2,7 +2,7 @@ require_relative '../node'
 
 class SuffixTreeDB
   def initialize(textFile)
-    @textFile = textFile
+    @textFile = File.open(textFile, "w")
     @dataValues = []
     @dataValueIdx = 0
   end

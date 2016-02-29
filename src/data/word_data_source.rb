@@ -18,6 +18,10 @@ class WordDataSource < BaseDataSource
     @numberWordsInFile = @words.length
   end
 
+  def numberValues
+    return @words.length
+  end
+
   def process(line)
     line = self.preprocessLine(line)
     return self.processData(line.split)
@@ -56,6 +60,10 @@ end
 class SingleWordDataSource < BaseDataSource
   def initialize(word)
     @word = word
+  end
+
+  def numberValues
+    return 1
   end
 
   def valueAt(offset)
